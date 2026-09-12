@@ -10,7 +10,9 @@ del día.
 ## 📱 Cómo ponerla en tu celular
 
 1. En GitHub entra a este repositorio → pestaña **Settings** → **Pages**.
-2. En *Source* escoge **Deploy from a branch**, rama **main** y carpeta **/ (root)**. Guarda.
+2. En *Source* escoge **Deploy from a branch**, la rama donde está el código
+   (`claude/grocery-inventory-app-is6fos`, o `main` si ya la combinaste) y la
+   carpeta **/ (root)**. Guarda.
 3. Espera 1 o 2 minutos. GitHub te dará una dirección como:
    `https://disenadorgrafico1.github.io/App-escanerr/`
 4. Abre esa dirección **en Chrome de tu celular**.
