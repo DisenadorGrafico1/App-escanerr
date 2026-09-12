@@ -1,0 +1,17 @@
+{
+  "name": "inventario-abarrotes",
+  "version": "1.0.0",
+  "description": "App de inventario, escáner de código de barras y ventas para tiendas de abarrotes. Funciona sin internet en el celular.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node pruebas/prueba-db.mjs",
+    "prueba-camara": "python3 pruebas/generar-codigo-barras.py && node pruebas/prueba-camara.mjs",
+    "servir": "python3 -m http.server 8080"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "^6.0.0",
+    "playwright": "^1.49.1"
+  },
+  "license": "MIT"
+}
