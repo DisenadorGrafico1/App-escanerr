@@ -16,10 +16,10 @@ del día.
    carpeta **/ (root)**. Guarda.
 4. Espera 1 o 2 minutos. GitHub te dará una dirección como:
    `https://disenadorgrafico1.github.io/App-escanerr/`
-
-A partir de ahí, cada cambio que se suba al repositorio se publica solo.
 5. Abre esa dirección **en Chrome de tu celular**.
 6. Toca el menú de Chrome (⋮) → **Agregar a pantalla principal**.
+
+A partir de ahí, cada cambio que se suba al repositorio se publica solo.
 
 Listo: queda como una app normal. Ábrela desde el icono verde, aunque no
 tengas datos ni WiFi.
