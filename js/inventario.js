@@ -438,6 +438,7 @@
       $('#cfgNegativo').checked = cfg.permitirNegativo !== false;
       $('#cfgITF').checked = !!cfg.leerITF;
       pintarPrecision(cfg.precisionEscaner || 'normal');
+      if (App.pintarVersion) App.pintarVersion();
       pintarCategorias();
     }
   };
@@ -493,6 +494,7 @@
     $$('#segPrecision button').forEach((b) => b.onclick = async () => {
       await guardarCfg('precisionEscaner', b.dataset.precision);
       pintarPrecision(b.dataset.precision);
+      if (App.pintarVersion) App.pintarVersion();
       aviso('Escáner en modo ' + b.dataset.precision, 'exito');
     });
     $('#btnAgregarCategoria').onclick = async () => {

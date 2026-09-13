@@ -146,6 +146,12 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
+## 🔢 Saber qué versión tienes
+
+En **Menú → Ajustes → Versión de la app** aparece la versión instalada y cómo
+está el escáner. Ahí mismo está el botón **Buscar actualización**: si hay una
+nueva la baja y la app se recarga sola.
+
 ## 🔄 ¿Actualizar borra mis datos?
 
 **No.** Actualizar cambia solo el programa (los archivos que están en GitHub).

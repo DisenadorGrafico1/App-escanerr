@@ -240,14 +240,14 @@ const Escaner = (() => {
   }
 
   function anchoDePuntos(puntos, anchoRecorte) {
-    if (!puntos || !puntos.length) return 1;
+    if (!puntos || !puntos.length) return null;   // no se pudo medir
     let min = Infinity, max = -Infinity;
     puntos.forEach((p) => {
       const x = typeof p.getX === 'function' ? p.getX() : p.x;
       if (x < min) min = x;
       if (x > max) max = x;
     });
-    if (!isFinite(min) || !isFinite(max)) return 1;
+    if (!isFinite(min) || !isFinite(max)) return null;
     return (max - min) / anchoRecorte;
   }
 
@@ -276,6 +276,37 @@ const Escaner = (() => {
       }
     }
     return null;
+  }
+
+  let lienzoChico = null, ctxChico = null;
+
+  /**
+   * Respaldo para cuando el navegador no informa el tamaño del código:
+   * se reduce la imagen a un tercio y se vuelve a intentar. Un código
+   * cercano aguanta la reducción; uno lejano ya no se lee. Así el filtro
+   * de cercanía funciona igual, aunque no haya medidas.
+   */
+  async function aguantaReduccion(texto) {
+    try {
+      if (!lienzoChico) {
+        lienzoChico = document.createElement('canvas');
+        ctxChico = lienzoChico.getContext('2d', { willReadFrequently: true });
+      }
+      lienzoChico.width = Math.max(40, Math.round(lienzo.width / 3));
+      lienzoChico.height = Math.max(40, Math.round(lienzo.height / 3));
+      ctxChico.drawImage(lienzo, 0, 0, lienzoChico.width, lienzoChico.height);
+      if (detectorNativo) {
+        const codigos = await detectorNativo.detect(lienzoChico);
+        return !!(codigos && codigos.some((c) => c.rawValue === texto));
+      }
+      const fuente = new ZXing.HTMLCanvasElementLuminanceSource(lienzoChico);
+      const resultado = lectorZX.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(fuente)));
+      try { lectorZX.reset(); } catch (e) {}
+      return !!resultado && resultado.getText() === texto;
+    } catch (e) {
+      try { if (lectorZX) lectorZX.reset(); } catch (e2) {}
+      return false;
+    }
   }
 
   async function leerConNativo(medidas) {
@@ -313,7 +344,7 @@ const Escaner = (() => {
     momentoCandidato = 0;
   }
 
-  function procesar(lectura) {
+  async function procesar(lectura) {
     const ahora = Date.now();
 
     if (!lectura) {
@@ -334,7 +365,15 @@ const Escaner = (() => {
     }
 
     // 2) ¿Está lo bastante cerca? De lejos es cuando se equivoca.
-    if (lectura.ancho < ajustes.minAncho) {
+    if (lectura.ancho === null || lectura.ancho === undefined) {
+      // El navegador no dijo el tamaño: se comprueba reduciendo la imagen.
+      const cerca = await aguantaReduccion(lectura.texto);
+      if (!cerca) {
+        decirPista('Acerca el código: se ve muy chico');
+        reiniciarCandidato();
+        return;
+      }
+    } else if (lectura.ancho < ajustes.minAncho) {
       decirPista('Acerca el código: se ve muy chico');
       reiniciarCandidato();
       return;
@@ -373,7 +412,7 @@ const Escaner = (() => {
         const medidas = dibujarRecorte();
         if (medidas) {
           const lectura = detectorNativo ? await leerConNativo(medidas) : leerConZXing(medidas);
-          procesar(lectura);
+          await procesar(lectura);
         }
       } catch (e) {
         // un cuadro fallido no detiene el escaneo

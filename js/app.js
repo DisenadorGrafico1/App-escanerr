@@ -153,6 +153,43 @@
     }, 30 * 60 * 1000);
   }
 
+  /* ===================== versión y actualizaciones ===================== */
+
+  /** Deja a la vista qué versión trae el celular: sirve para no adivinar. */
+  function pintarVersion() {
+    const modo = (estado.cfg && estado.cfg.precisionEscaner) || 'normal';
+    const exigencia = Math.round(Escaner.ajustes.minAncho * 100);
+    const v = 'v' + App.VERSION;
+    const el = (sel, texto) => { const e = $(sel); if (e) e.textContent = texto; };
+    el('#versionApp', v);
+    el('#versionEscaner', modo + ' · ' + exigencia + '%');
+    el('#cajonPie', 'Funciona sin internet · ' + v);
+    el('#pieVersion', 'Inventario de abarrotes · ' + v + ' · ' + App.FECHA_VERSION);
+  }
+  App.pintarVersion = pintarVersion;
+
+  async function buscarActualizacion() {
+    const estadoEl = $('#estadoActualizacion');
+    if (!('serviceWorker' in navigator)) {
+      estadoEl.textContent = 'Este navegador no guarda la app para usarla sin internet.';
+      return;
+    }
+    estadoEl.textContent = 'Buscando…';
+    try {
+      const registro = await navigator.serviceWorker.getRegistration();
+      if (!registro) { estadoEl.textContent = 'Abre la app desde su icono para poder actualizarla.'; return; }
+      await registro.update();
+      await new Promise((r) => setTimeout(r, 2500));
+      if (registro.installing || registro.waiting) {
+        estadoEl.textContent = 'Descargando la versión nueva… en un momento se recarga sola.';
+      } else {
+        estadoEl.textContent = 'Ya tienes la última versión (v' + App.VERSION + ').';
+      }
+    } catch (e) {
+      estadoEl.textContent = 'No se pudo revisar: ' + e.message;
+    }
+  }
+
   /* ===================== actualizaciones ===================== */
 
   /**
@@ -204,6 +241,8 @@
     App.conectarInventario();
     App.conectarGestion();
     conectarReportes();
+    $('#btnBuscarActualizacion').onclick = buscarActualizacion;
+    pintarVersion();
 
     await refrescar(false);
     await ir('inicio');

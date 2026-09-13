@@ -58,7 +58,7 @@
     <button data-vista="reportes"><i>📄</i>Reportes y PDF</button>
     <button data-vista="ajustes"><i>⚙️</i>Ajustes</button>
   </nav>
-  <p class="cajon-pie">Funciona sin internet · v2.0</p>
+  <p class="cajon-pie" id="cajonPie">Funciona sin internet</p>
 </aside>
 
 <main id="contenido">
@@ -448,6 +448,16 @@
     </div>
 
     <div class="panel">
+      <h2>🔄 Versión de la app</h2>
+      <div class="totalizador">
+        <div><span>Instalada</span><b id="versionApp">—</b></div>
+        <div><span>Escáner</span><b id="versionEscaner">—</b></div>
+      </div>
+      <button class="btn-sec" id="btnBuscarActualizacion" style="width:100%">Buscar actualización</button>
+      <p class="ayuda" id="estadoActualizacion" style="margin-top:8px"></p>
+    </div>
+
+    <div class="panel">
       <h2>💾 Respaldo</h2>
       <p class="ayuda">Todo vive dentro de tu celular. Descarga un respaldo seguido y guárdalo en WhatsApp o Drive.</p>
       <div class="fila-botones">
@@ -458,7 +468,7 @@
       <button class="btn-texto peligro" id="btnBorrarTodo">Borrar todos los datos</button>
     </div>
 
-    <p class="pie">Inventario de abarrotes · funciona sin internet · versión 2.0</p>
+    <p class="pie" id="pieVersion">Inventario de abarrotes · funciona sin internet</p>
   </section>
 </main>
 

@@ -3,6 +3,10 @@
  * avisos, ventanas emergentes y la pantalla de Inicio.
  */
 const App = (() => {
+  /* Se sube en cada publicación: sirve para saber qué trae el celular. */
+  const VERSION = '2.2';
+  const FECHA_VERSION = '13 sep 2026';
+
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -309,6 +313,7 @@ const App = (() => {
   }
 
   return {
+    VERSION, FECHA_VERSION,
     $, $$, estado, vistas, dinero, esc, cantidad, hora, fechaLarga, fechaCorta, cuando,
     tarjeta, nivel, mayusInicial, aviso, abrirModal, cerrarModal, confirmar, pedirNumero,
     ir, refrescar, pintarAlertas, panelAlertas, conectarNavegacion, cerrarCajon
