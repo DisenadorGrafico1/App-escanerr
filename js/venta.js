@@ -18,6 +18,7 @@
     $('#videoAgregar').parentElement.classList.toggle('escaneando', activo && !enVender);
     $('#btnLuzVender').hidden = !(activo && enVender && Escaner.soportaLinterna());
     $('#btnLuzAgregar').hidden = !(activo && !enVender && Escaner.soportaLinterna());
+    if (!activo) { $('#pistaVender').classList.add('oculto'); $('#pistaAgregar').classList.add('oculto'); }
   }
 
   function mensajeCamara(e) {
@@ -28,10 +29,24 @@
     return (e && e.message) || 'No se pudo abrir la cámara';
   }
 
+  /** Mensajes de ayuda sobre la imagen: "acerca el código", "leyendo"… */
+  function mostrarPista(video, texto) {
+    const el = video.parentElement.querySelector('.pista');
+    if (!el) return;
+    if (!texto) { el.classList.add('oculto'); return; }
+    el.textContent = texto;
+    el.className = 'pista' +
+      (/[Aa]cerca|chico|no se lee/.test(texto) ? ' cerca' : '') +
+      (/Leyendo/.test(texto) ? ' leyendo' : '');
+  }
+
   async function alternarCamara(video, callback) {
     try {
       if (Escaner.estaActivo()) await Escaner.detener();
-      else { Escaner.configurar(estado.cfg); await Escaner.iniciar(video, callback); }
+      else {
+        Escaner.configurar(estado.cfg);
+        await Escaner.iniciar(video, callback, { onPista: (t) => mostrarPista(video, t) });
+      }
     } catch (e) { aviso(mensajeCamara(e), 'error'); }
     pintarBotonesCamara();
   }

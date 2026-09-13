@@ -15,6 +15,8 @@ def ean13(codigo):
         bits += R[d[i]]
     return bits + '101'
 
+import sys
+LEJOS = len(sys.argv) > 1 and sys.argv[1] == 'lejos'
 W, H, FRAMES = 640, 480, 160
 def digito_verificador(doce):
     s = sum(int(d) * (3 if i % 2 else 1) for i, d in enumerate(doce))
@@ -23,10 +25,10 @@ def digito_verificador(doce):
 BASE = '750105530001'
 CODIGO = BASE + digito_verificador(BASE)
 bits = ean13(CODIGO)
-mod = 4                                  # ancho de cada módulo en píxeles
+mod = 1 if LEJOS else 4                  # ancho de cada módulo en píxeles
 ancho_barras = len(bits) * mod           # 95 * 4 = 380
 x0 = (W - ancho_barras) // 2
-y0, y1 = 140, 340
+y0, y1 = (200, 280) if LEJOS else (140, 340)
 
 fila_base = bytearray([235]) * W         # blanco
 fila_barra = bytearray(fila_base)
@@ -40,8 +42,9 @@ for y in range(H):
     y_plane += fila_barra if y0 <= y < y1 else fila_base
 uv = bytearray([128]) * (W*H//4)
 
-with open('/tmp/barras.y4m','wb') as f:
+salida = '/tmp/barras-lejos.y4m' if LEJOS else '/tmp/barras.y4m'
+with open(salida,'wb') as f:
     f.write(b'YUV4MPEG2 W%d H%d F15:1 Ip A1:1 C420mpeg2\n' % (W, H))
     for _ in range(FRAMES):
         f.write(b'FRAME\n'); f.write(y_plane); f.write(uv); f.write(uv)
-print('video listo con el código', CODIGO)
+print('video listo:', salida, '· código', CODIGO, '· módulo', mod, 'px')

@@ -9,7 +9,9 @@
     "prueba-camara": "python3 pruebas/generar-codigo-barras.py && node pruebas/prueba-camara.mjs",
     "servir": "python3 -m http.server 8080",
     "prueba-app": "node pruebas/prueba-app.mjs",
-    "prueba-actualizacion": "node pruebas/prueba-actualizacion.mjs"
+    "prueba-actualizacion": "node pruebas/prueba-actualizacion.mjs",
+    "prueba-precision": "node pruebas/prueba-precision.mjs",
+    "prueba-lejos": "python3 pruebas/generar-codigo-barras.py && python3 pruebas/generar-codigo-barras.py lejos && node pruebas/prueba-lejos.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.0.0",

@@ -109,6 +109,36 @@ y los productos regresan al inventario).
 - **Fiados pendientes**: quién debe, cuánto y desde cuándo.
 - **Corte de caja** del último día cerrado.
 
+### 🎯 Precisión del escáner
+
+De lejos, cualquier lector "adivina" y puede registrar números equivocados.
+Para que eso no pase, el escáner:
+
+1. Solo mira **el recuadro del centro**, con margen blanco alrededor (los
+   códigos de barras necesitan ese espacio para leerse, incluso si pegas el
+   producto a la cámara).
+2. Exige que el código **se vea grande** dentro del recuadro. Si está lejos no
+   registra nada: aparece en pantalla **"Acerca el código"**.
+3. Comprueba el **dígito verificador** (EAN-13, EAN-8, UPC-A). Un número mal
+   leído casi nunca pasa esa prueba.
+4. Pide leer **el mismo número dos veces seguidas** antes de darlo por bueno.
+5. Prueba varios procesados por cuadro (normal, por histograma y en negativo),
+   para etiquetas brillosas o con poca luz.
+6. Trae apagados los formatos que se prestan a lecturas a medias (ITF de caja
+   y Codabar); se encienden en Ajustes si los necesitas.
+
+En **Ajustes → Exigencia del escáner** eliges:
+
+| Modo | Qué hace |
+|---|---|
+| **Rápido** | Registra en cuanto lee. Más ágil, con más riesgo de error. |
+| **Normal** | Código grande en el recuadro y confirmado 2 veces. *Recomendado.* |
+| **Estricto** | Código muy cerca y confirmado 3 veces. Para códigos maltratados. |
+
+Medido con pruebas automáticas: de cerca (pegado, normal, con mala luz y a
+media distancia) acertó **48 de 48** lecturas; de lejos **no registró ninguna**
+y pidió acercar el código; **cero números equivocados en 96 intentos**.
+
 ### 🔔 Avisos
 La campanita junta todo: productos por acabarse, visitas de proveedor
 próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
@@ -161,8 +191,12 @@ pruebas/              pruebas automatizadas
 ```
 
 - **Lectura de códigos**: `BarcodeDetector` (nativo en Chrome de Android) y si
-  no existe cae a **ZXing**. Formatos: EAN-13, EAN-8, UPC-A, UPC-E, Code 128,
-  Code 39, ITF y Codabar.
+  no existe cae a **ZXing** por API de bajo nivel (`MultiFormatReader` +
+  `HybridBinarizer`/`GlobalHistogramBinarizer`), analizando solo la franja
+  central con marco blanco. Formatos: EAN-13, EAN-8, UPC-A, UPC-E, Code 128,
+  Code 39 y QR; ITF y Codabar opcionales.
+- **Filtros antes de registrar**: dígito verificador, tamaño mínimo del código
+  en el recuadro y confirmación repetida.
 - **Existencias**: siempre en unidad base (pieza suelta o kilo). Un paquete de
   N piezas descuenta N unidades, así las cuentas de caja y pieza salen solas.
 - **Datos**: IndexedDB. Nada sale del dispositivo.
@@ -173,6 +207,8 @@ npm test               # 21 pruebas de inventario, ventas, fiados, agenda y cort
 npm run prueba-app     # recorre toda la app en Chromium (alta, venta, fiado, corte, PDF)
 npm run prueba-camara  # prueba el escáner con una cámara simulada
 npm run prueba-actualizacion  # comprueba que actualizar no borra lo registrado
+npm run prueba-precision      # mide aciertos del escáner de cerca y de lejos
+npm run prueba-lejos          # cámara simulada: de lejos avisa y no registra
 npm run servir         # servidor local en http://localhost:8080
 ```
 

@@ -436,9 +436,22 @@
       $('#cfgSonido').checked = cfg.sonido !== false;
       $('#cfgVibrar').checked = cfg.vibrar !== false;
       $('#cfgNegativo').checked = cfg.permitirNegativo !== false;
+      $('#cfgITF').checked = !!cfg.leerITF;
+      pintarPrecision(cfg.precisionEscaner || 'normal');
       pintarCategorias();
     }
   };
+
+  const AYUDA_PRECISION = {
+    rapido: 'Registra en cuanto lee, aunque el código esté lejos. Más rápido, pero puede equivocarse.',
+    normal: 'Pide que el código se vea grande en el recuadro y lo confirma dos veces. Recomendado.',
+    estricto: 'Exige el código muy cerca y lo confirma tres veces. Para códigos maltratados o borrosos.'
+  };
+
+  function pintarPrecision(valor) {
+    $$('#segPrecision button').forEach((b) => b.classList.toggle('activo', b.dataset.precision === valor));
+    $('#ayudaPrecision').textContent = AYUDA_PRECISION[valor] || '';
+  }
 
   function pintarCategorias() {
     $('#listaCategorias').innerHTML = estado.cfg.categorias.map((c) =>
@@ -476,6 +489,12 @@
     $('#cfgSonido').addEventListener('change', (e) => guardarCfg('sonido', e.target.checked));
     $('#cfgVibrar').addEventListener('change', (e) => guardarCfg('vibrar', e.target.checked));
     $('#cfgNegativo').addEventListener('change', (e) => guardarCfg('permitirNegativo', e.target.checked));
+    $('#cfgITF').addEventListener('change', (e) => guardarCfg('leerITF', e.target.checked));
+    $$('#segPrecision button').forEach((b) => b.onclick = async () => {
+      await guardarCfg('precisionEscaner', b.dataset.precision);
+      pintarPrecision(b.dataset.precision);
+      aviso('Escáner en modo ' + b.dataset.precision, 'exito');
+    });
     $('#btnAgregarCategoria').onclick = async () => {
       const nombre = $('#nuevaCategoria').value.trim();
       if (!nombre) return;

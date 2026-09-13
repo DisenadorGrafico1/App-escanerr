@@ -87,6 +87,7 @@
       <video id="videoVender" playsinline muted></video>
       <div class="mira"></div>
       <div class="camara-vacia" id="avisoVender"><p>📷 Toca <b>Escanear</b> y apunta al código de barras</p></div>
+      <div class="pista oculto" id="pistaVender"></div>
       <div class="camara-acciones">
         <button class="chip" id="btnCamaraVender">▶ Escanear</button>
         <button class="chip" id="btnLuzVender" hidden>🔦</button>
@@ -125,6 +126,7 @@
       <video id="videoAgregar" playsinline muted></video>
       <div class="mira"></div>
       <div class="camara-vacia" id="avisoAgregar"><p>📷 Escanea para dar de alta o sumar piezas</p></div>
+      <div class="pista oculto" id="pistaAgregar"></div>
       <div class="camara-acciones">
         <button class="chip" id="btnCamaraAgregar">▶ Escanear</button>
         <button class="chip" id="btnLuzAgregar" hidden>🔦</button>
@@ -420,6 +422,16 @@
           <input type="number" id="cfgAvisarVisita" inputmode="numeric" step="1">
         </div>
       </div>
+      <div class="campo">
+        <label>Exigencia del escáner</label>
+        <div class="segmentado" id="segPrecision">
+          <button type="button" data-precision="rapido">Rápido</button>
+          <button type="button" data-precision="normal" class="activo">Normal</button>
+          <button type="button" data-precision="estricto">Estricto</button>
+        </div>
+        <p class="ayuda mini" id="ayudaPrecision"></p>
+      </div>
+      <label class="check"><input type="checkbox" id="cfgITF"> Leer códigos de caja (ITF) y Codabar</label>
       <label class="check"><input type="checkbox" id="cfgSonido"> Pitido al escanear y en los avisos</label>
       <label class="check"><input type="checkbox" id="cfgVibrar"> Vibrar al escanear</label>
       <label class="check"><input type="checkbox" id="cfgNegativo"> Permitir vender sin existencia</label>

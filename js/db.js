@@ -17,6 +17,8 @@ const DB = (() => {
     sonido: true,
     vibrar: true,
     permitirNegativo: true,
+    precisionEscaner: 'normal',
+    leerITF: false,
     diasCreditoDefault: 7,
     avisarVisitaDias: 2,
     categorias: [
