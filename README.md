@@ -1,129 +1,163 @@
-# 🛒 Mi Tienda — Inventario y Ventas con escáner
+# 🛒 Mi Tienda — Inventario, ventas y fiados
 
 App para tu tienda de abarrotes. **Todo se guarda en tu celular**: no necesita
 internet, ni cuenta, ni pagar nada. Escaneas el código de barras con la cámara,
-suena un pitido y la app lleva solita el inventario, las ventas y las cuentas
-del día.
+suena un pitido y la app lleva sola el inventario, las ventas, los fiados, la
+agenda de proveedores y el corte de caja.
+
+**App en línea:** https://disenadorgrafico1.github.io/App-escanerr/
 
 ---
 
 ## 📱 Cómo ponerla en tu celular
 
-1. El repositorio debe ser **público** (Pages es gratis solo en repos públicos).
-2. En GitHub entra a este repositorio → pestaña **Settings** → **Pages**.
-3. En *Source* escoge **Deploy from a branch**, la rama donde está el código
-   (`claude/grocery-inventory-app-is6fos`, o `main` si ya la combinaste) y la
-   carpeta **/ (root)**. Guarda.
-4. Espera 1 o 2 minutos. GitHub te dará una dirección como:
-   `https://disenadorgrafico1.github.io/App-escanerr/`
-5. Abre esa dirección **en Chrome de tu celular**.
-6. Toca el menú de Chrome (⋮) → **Agregar a pantalla principal**.
+1. Abre el enlace de arriba **en Chrome de tu celular**.
+2. Toca el menú de Chrome (⋮) → **Agregar a pantalla principal**.
+3. Ábrela desde el icono morado. La primera vez que toques **Escanear**,
+   Chrome te pedirá permiso para la cámara: dale **Permitir**.
 
-A partir de ahí, cada cambio que se suba al repositorio se publica solo.
-
-Listo: queda como una app normal. Ábrela desde el icono verde, aunque no
-tengas datos ni WiFi.
+Después de la primera vez funciona **sin internet**: la app queda guardada
+dentro del teléfono.
 
 > La cámara solo funciona con direcciones `https://` (como la de GitHub Pages).
-> Si abres el archivo directamente desde la galería o por `http://`, el celular
-> no deja usar la cámara; ahí todavía puedes escribir el código a mano.
+> Si abres el archivo por `http://`, el celular no deja usar la cámara; ahí
+> todavía puedes teclear el código a mano.
 
 ---
 
 ## 🧾 Cómo se usa
 
-### ➕ Agregar productos (pantalla "Agregar")
-1. Toca **Escanear** y apunta al código de barras. Suena el pitido.
-2. Si es un producto nuevo, escribes: **nombre**, **categoría** (Bebidas,
-   Botanas, Limpieza…), **costo** (lo que te cuesta) y **precio de venta**.
-3. Pones **cuántas piezas** estás metiendo (hay botones +5, +10, +12, +24).
-4. Toca **Agregar al inventario**.
+### 🏠 Inicio
+Un vistazo del negocio: lo vendido hoy, la ganancia, cuánto te deben de fiado,
+cuánto tienes invertido, tus pendientes y lo más vendido del día.
 
-Si escaneas un producto que ya tenías, la app lo reconoce y solo le **suma las
-piezas nuevas**, actualiza el costo y va acumulando cuánto llevas invertido.
-Abajo ves el total de piezas y dinero que metiste en esa sesión.
+### 💵 Abrir y cerrar el día (Caja)
+- **Abrir día:** anotas el fondo de caja (el dinero para dar cambio).
+- **Cerrar día:** la app te dice cuánto **debe haber** en la caja
+  (fondo + ventas en efectivo + abonos de fiados), tú cuentas el dinero y te
+  avisa si **sobra, falta o cuadra**. El corte se guarda y se descarga en PDF.
 
-También defines **con cuántas piezas quieres que te avise** ("avisarme cuando
-queden menos de…") y la **cantidad ideal** que te gusta tener en bodega.
+### ➕ Agregar productos
+Escanea (o toca **Sin código** / **Teclear**) y escoge cómo se vende:
 
-### 🛒 Vender (pantalla "Vender")
-1. Toca **Escanear** y pasa los productos del cliente, uno por uno.
-   Cada pitido agrega una pieza; si pasas dos veces el mismo, suma 2.
-2. Puedes corregir cantidades con los botones **−** y **+**.
-3. Escribe con cuánto te paga el cliente y la app te dice **el cambio**.
-4. Toca **Cobrar venta**: se descuentan las piezas del inventario y se guarda
-   el ticket del día.
+| Tipo | Para qué sirve |
+|---|---|
+| **Por pieza** | Lo normal: refrescos, galletas, latas… |
+| **Por peso** | Granel: jitomate, frijol, queso. Se vende por kilo. |
+| **Paquete + pieza** | Compras la caja y vendes caja **o** pieza suelta. |
 
-Si escaneas algo que no está registrado, la app te avisa con un sonido grave y
-te ofrece darlo de alta al momento.
+**Ejemplo de paquete:** cigarros. Pones que la cajetilla trae **20** piezas, el
+costo de la cajetilla y su precio, más el precio del cigarro suelto. La app
+calcula sola el costo por cigarro y **lleva el inventario en piezas sueltas**:
+si vendes una cajetilla descuenta 20, y cada 20 sueltos que vendas equivalen a
+una cajetilla menos. En el inventario lo ves como "3 paq. y 12 pzs".
 
-### 📦 Inventario
-Ves **cuántas piezas tienes de cada producto**, cuánto dinero tienes invertido
-y cuáles están por acabarse (en rojo). Puedes buscar por nombre o código,
-filtrar por categoría y ordenar por "menos existencia".
+También defines el **grupo** (Bebidas, Botanas, Limpieza…), **con cuántas
+piezas quieres que te avise**, la cantidad ideal en bodega y **quién te lo
+surte**.
 
-Al tocar un producto puedes corregirlo todo: nombre, categoría, costo, precio,
-el aviso de mínimo y **corregir la existencia** cuando haces conteo físico.
+Si escaneas algo que ya tenías, solo le sumas piezas y acumula tu inversión.
+
+### 🛒 Vender
+1. Toca **Escanear** y pasa los productos.
+   - Si es de **paquete**, te pregunta: ¿caja completa o pieza suelta?
+   - Si es de **peso**, escribes los kilos **o** el monto en dinero y la app
+     saca la otra cifra.
+   - Si no trae código, toca **Sin código** y aparece la lista para tocar.
+2. Escribe con cuánto te paga el cliente: te dice **el cambio**.
+3. **Cobrar en efectivo** o **Dar crédito (fiar)**.
+
+### 🤝 Fiados y clientes
+Al fiar eliges el cliente (o lo das de alta con nombre y teléfono) y la fecha
+en que debe pagar. El fiado:
+- descuenta los productos del inventario,
+- queda en la lista de **quién te debe**,
+- **se agenda solo** en el calendario para su cobro,
+- y te avisa cuando se acerca o se vence la fecha.
+
+Puedes registrar **abonos parciales**, marcar **ya pagó todo**, llamar al
+cliente con un toque y descargar el **PDF de quién te debe**.
+
+### 📅 Agenda y proveedores
+Calendario del mes con:
+- 🔵 visitas de proveedor
+- 🟠 cobros de fiados
+
+Al **agendar una visita** eliges el proveedor (o lo creas con su teléfono y los
+grupos que te surte) y la app arma sola **la lista de lo que hay que pedirle**,
+tomando los productos de sus grupos que ya están bajos. Esa lista se descarga
+en PDF para llevarla o mandarla por WhatsApp, y se puede recalcular al momento.
+
+### 📦 Mis productos
+Inventario **agrupado por grupo**, con búsqueda, filtros y totales: cuántos
+productos tienes, cuánto llevas invertido, el valor de venta y cuántos están
+por acabarse (en rojo). Al tocar un producto corriges precios, el aviso de
+mínimo y la existencia real cuando haces conteo físico.
 
 ### 💰 Ventas
-Escoge **Hoy**, **Ayer**, **7 días** o **Este mes** y verás cuánto vendiste,
-cuánta ganancia hiciste, cuántos tickets y cuántas piezas. Abajo aparece cada
-ticket con su detalle; si te equivocaste, lo cancelas y las piezas regresan al
-inventario.
+Hoy, ayer, 7 días o el mes: vendido, ganancia, tickets, cuánto fue fiado,
+**gráfica de ventas por hora** y cada ticket con su detalle (se puede cancelar
+y los productos regresan al inventario).
 
-### 📄 PDF para el proveedor (pantalla "Más")
-Escribes un número —por ejemplo **15**— y la app arma un PDF con **todos los
-productos donde ya quedan 15 piezas o menos**, con:
+### 📄 Reportes en PDF
+- **Lista de compras**: escribes un número (ej. 15) y trae todos los productos
+  con 15 piezas o menos, cuánto conviene comprar y cuánto vas a gastar.
+- **Ventas del periodo**, día por día y los más vendidos.
+- **Ventas por hora**: a qué hora vendes más y cuándo entra más gente.
+- **Acumulado semanal** y **acumulado mensual**.
+- **Inventario completo** con el valor de todo.
+- **Fiados pendientes**: quién debe, cuánto y desde cuándo.
+- **Corte de caja** del último día cerrado.
 
-- cuántas piezas quedan y cuál es el mínimo,
-- **cuántas conviene comprar**,
-- el costo de cada una y **cuánto vas a gastar en total**.
-
-Puedes filtrar por categoría (por ejemplo, solo "Bebidas" para el refresquero).
-El botón **Compartir** lo manda directo por WhatsApp. También hay PDF del
-**inventario completo** y de las **ventas del periodo**.
-
-### 🔔 Alertas
-La campanita de arriba muestra cuántos productos llegaron a su mínimo. Tócala
-para ver la lista.
+### 🔔 Avisos
+La campanita junta todo: productos por acabarse, visitas de proveedor
+próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
+(el celular solo deja sonar después de que tocas la pantalla).
 
 ---
 
 ## 💾 Muy importante: haz respaldos
 
-Los datos viven **dentro del celular**. Si borras el navegador o pierdes el
-teléfono, se pierden. En **Más → Respaldo → Descargar respaldo** bajas un
-archivo; guárdalo en Google Drive o mándatelo por WhatsApp. Con **Restaurar
-respaldo** lo recuperas en cualquier celular.
+Los datos viven **dentro del celular**. Si borras los datos de Chrome o pierdes
+el teléfono, se pierden. En **Menú → Ajustes → Respaldo → Descargar respaldo**
+bajas un archivo; guárdalo en Google Drive o mándatelo por WhatsApp. Con
+**Restaurar respaldo** lo recuperas en cualquier celular.
 
 ---
 
 ## 🔧 Para quien le mueva al código
 
-Es una PWA sin compilación: HTML, CSS y JavaScript puro.
+PWA sin compilación: HTML, CSS y JavaScript puro.
 
 ```
-index.html                 pantallas
-styles.css                 estilos (modo claro y oscuro)
-js/db.js                   datos: productos, ventas, movimientos (IndexedDB)
-js/scanner.js              cámara, códigos de barras y pitidos
-js/reportes.js             PDF (lista de compras, inventario, ventas)
-js/app.js                  interfaz y flujo
-vendor/                    ZXing y jsPDF incluidos (para trabajar sin internet)
-sw.js                      service worker: funciona offline
-pruebas/                   pruebas automatizadas
+index.html            todas las pantallas
+styles.css            estilos (modo claro y oscuro)
+js/db.js              datos: productos, ventas, fiados, agenda, cortes (IndexedDB)
+js/scanner.js         cámara, códigos de barras, pitidos y campana
+js/reportes.js        los 9 PDF
+js/nucleo.js          navegación, menú lateral, avisos e Inicio
+js/venta.js           vender, tickets y caja
+js/inventario.js      alta de productos, inventario y ajustes
+js/gestion.js         fiados, clientes, agenda y proveedores
+js/app.js             reportes y arranque
+vendor/               ZXing y jsPDF incluidos (para trabajar sin internet)
+sw.js                 service worker: funciona offline
+pruebas/              pruebas automatizadas
 ```
 
-- **Lectura de códigos**: usa `BarcodeDetector` (nativo en Chrome de Android) y
-  si no existe, cae a **ZXing**. Formatos: EAN-13, EAN-8, UPC-A, UPC-E,
-  Code 128, Code 39, ITF y Codabar.
+- **Lectura de códigos**: `BarcodeDetector` (nativo en Chrome de Android) y si
+  no existe cae a **ZXing**. Formatos: EAN-13, EAN-8, UPC-A, UPC-E, Code 128,
+  Code 39, ITF y Codabar.
+- **Existencias**: siempre en unidad base (pieza suelta o kilo). Un paquete de
+  N piezas descuenta N unidades, así las cuentas de caja y pieza salen solas.
 - **Datos**: IndexedDB. Nada sale del dispositivo.
 
 ```bash
 npm install
-npm test              # 12 pruebas de inventario, ventas y respaldo
-npm run prueba-camara # prueba el escáner con una cámara simulada (Playwright)
-npm run servir        # servidor local en http://localhost:8080
+npm test               # 21 pruebas de inventario, ventas, fiados, agenda y corte
+npm run prueba-app     # recorre toda la app en Chromium (alta, venta, fiado, corte, PDF)
+npm run prueba-camara  # prueba el escáner con una cámara simulada
+npm run servir         # servidor local en http://localhost:8080
 ```
 
 Licencia MIT.

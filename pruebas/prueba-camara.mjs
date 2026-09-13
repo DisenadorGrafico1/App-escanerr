@@ -69,7 +69,7 @@ await page.goto('http://localhost:' + PUERTO + '/index.html');
 await page.waitForTimeout(500);
 
 // 1. Alta escaneando un código desconocido
-await page.click('[data-vista="agregar"]');
+await page.click('.barra-inferior [data-vista="agregar"]');
 await page.click('#btnCamaraAgregar');
 await page.waitForSelector('#panelProducto:not([hidden])', { timeout: 25000 });
 paso('la cámara leyó un código nuevo y abrió el alta');
@@ -94,16 +94,25 @@ if (p.stock !== 36 || p.invertido !== 432) throw new Error('no acumuló: ' + JSO
 paso('re-escaneo acumuló 36 piezas y $432 invertidos');
 
 // 3. Vender escaneando
-await page.click('[data-vista="vender"]');
+await page.click('.barra-inferior [data-vista="vender"]');
 await page.click('#btnCamaraVender');
 await page.waitForFunction(() => document.querySelector('#carritoPiezas').textContent !== '0', { timeout: 25000 });
 paso('el escaneo agregó el producto al carrito');
 await page.waitForTimeout(4000);
+// Se pausa la cámara para que no entre otra lectura mientras se cuenta.
+await page.click('#btnCamaraVender');
+await page.waitForTimeout(500);
 const piezas = Number(await page.textContent('#carritoPiezas'));
 if (piezas < 2 || piezas > 6) throw new Error('el filtro anti-duplicados falló: ' + piezas);
 paso('lecturas repetidas espaciadas correctamente (' + piezas + ' en ~4s)');
 await page.click('#btnCobrar');
-await page.waitForTimeout(700);
+await page.waitForTimeout(400);
+// La app pregunta si quiere abrir el día; aquí solo cobramos.
+const soloCobrar = await page.$('#mSolo');
+if (soloCobrar) { await soloCobrar.click(); await page.waitForTimeout(500); }
+const seguir = await page.$('#mSeguir');
+if (seguir) await seguir.click();
+await page.waitForTimeout(300);
 p = await page.evaluate((c) => DB.getProducto(c), CODIGO);
 if (p.stock !== 36 - piezas) throw new Error('no descontó bien: ' + p.stock);
 paso('la venta descontó ' + piezas + ' piezas (quedan ' + p.stock + ')');

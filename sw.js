@@ -2,7 +2,7 @@
  * sw.js — Service Worker: guarda la app en el celular para que
  * abra y funcione aunque no haya internet ni datos.
  */
-const CACHE = 'tienda-abarrotes-v1';
+const CACHE = 'tienda-abarrotes-v2';
 const ARCHIVOS = [
   './',
   './index.html',
@@ -11,6 +11,10 @@ const ARCHIVOS = [
   './js/db.js',
   './js/scanner.js',
   './js/reportes.js',
+  './js/nucleo.js',
+  './js/venta.js',
+  './js/inventario.js',
+  './js/gestion.js',
   './js/app.js',
   './vendor/zxing.min.js',
   './vendor/jspdf.umd.min.js',

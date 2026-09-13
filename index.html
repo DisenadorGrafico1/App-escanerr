@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <title>Mi Tienda · Inventario y Ventas</title>
-<meta name="description" content="Inventario, escáner de código de barras y control de ventas para tu tienda de abarrotes. Funciona sin internet.">
-<meta name="theme-color" content="#16805c">
+<meta name="description" content="Inventario, escáner de código de barras, ventas, créditos y agenda de proveedores para tu tienda. Funciona sin internet.">
+<meta name="theme-color" content="#5B2C91">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,35 +17,85 @@
 </head>
 <body>
 
-<header class="barra-superior">
-  <div class="titulo">
-    <strong id="nombreTienda">Mi tienda</strong>
-    <span id="subtitulo">Inventario y ventas</span>
+<!-- ===================== BARRA SUPERIOR ===================== -->
+<header class="barra">
+  <button class="icono" id="btnMenu" aria-label="Menú">☰</button>
+  <div class="barra-titulo">
+    <strong id="tituloVista">Inicio</strong>
+    <span id="nombreTienda">Mi tienda</span>
   </div>
-  <button class="icono" id="btnAlertas" title="Productos por acabarse">
+  <button class="icono" id="btnAlertas" aria-label="Avisos">
     🔔<span class="globo oculto" id="globoAlertas">0</span>
   </button>
 </header>
 
+<!-- ===================== MENÚ LATERAL ===================== -->
+<div class="velo oculto" id="velo"></div>
+<aside class="cajon" id="cajon">
+  <div class="cajon-cabeza">
+    <div class="cajon-logo">🛒</div>
+    <div>
+      <strong id="cajonTienda">Mi tienda</strong>
+      <span id="cajonEstado">Día cerrado</span>
+    </div>
+  </div>
+  <nav class="cajon-menu">
+    <p class="cajon-grupo">Venta</p>
+    <button data-vista="inicio"><i>🏠</i>Inicio</button>
+    <button data-vista="vender"><i>🛒</i>Nueva venta</button>
+    <button data-vista="ventas"><i>🧾</i>Ventas y tickets</button>
+    <button data-vista="creditos"><i>🤝</i>Fiados y clientes<em class="pastilla oculto" id="pastillaCreditos"></em></button>
+    <button data-vista="caja"><i>💵</i>Caja: abrir y cerrar día</button>
+
+    <p class="cajon-grupo">Inventario</p>
+    <button data-vista="agregar"><i>➕</i>Agregar productos</button>
+    <button data-vista="inventario"><i>📦</i>Mis productos<em class="pastilla oculto" id="pastillaInventario"></em></button>
+
+    <p class="cajon-grupo">Gestión</p>
+    <button data-vista="agenda"><i>📅</i>Agenda y proveedores<em class="pastilla oculto" id="pastillaAgenda"></em></button>
+
+    <p class="cajon-grupo">Reportes y ajustes</p>
+    <button data-vista="reportes"><i>📄</i>Reportes y PDF</button>
+    <button data-vista="ajustes"><i>⚙️</i>Ajustes</button>
+  </nav>
+  <p class="cajon-pie">Funciona sin internet · v2.0</p>
+</aside>
+
 <main id="contenido">
 
-  <!-- ======================= VENDER ======================= -->
-  <section class="vista activa" id="vista-vender">
+  <!-- ===================== INICIO ===================== -->
+  <section class="vista activa" id="vista-inicio">
+    <div class="saludo">
+      <h1 id="saludoTexto">Hola</h1>
+      <p id="saludoFecha"></p>
+    </div>
+    <div id="avisoJornada"></div>
+    <div class="tarjetas" id="tarjetasInicio"></div>
+    <div class="acciones-rapidas">
+      <button class="accion" data-ir="vender"><i>🛒</i><span>Vender</span></button>
+      <button class="accion" data-ir="agregar"><i>➕</i><span>Agregar</span></button>
+      <button class="accion" data-ir="creditos"><i>🤝</i><span>Fiados</span></button>
+      <button class="accion" data-ir="reportes"><i>📄</i><span>Reportes</span></button>
+    </div>
+    <div class="panel" id="panelPendientes"></div>
+    <div class="panel" id="panelTopDia"></div>
+  </section>
+
+  <!-- ===================== VENDER ===================== -->
+  <section class="vista" id="vista-vender">
     <div class="camara">
       <video id="videoVender" playsinline muted></video>
       <div class="mira"></div>
-      <div class="camara-vacia" id="avisoVender">
-        <p>📷 Toca <b>Escanear</b> y apunta al código de barras</p>
-      </div>
+      <div class="camara-vacia" id="avisoVender"><p>📷 Toca <b>Escanear</b> y apunta al código de barras</p></div>
       <div class="camara-acciones">
         <button class="chip" id="btnCamaraVender">▶ Escanear</button>
-        <button class="chip" id="btnLuzVender" hidden>🔦 Luz</button>
+        <button class="chip" id="btnLuzVender" hidden>🔦</button>
       </div>
     </div>
 
-    <div class="fila-manual">
-      <input type="text" id="codigoManualVender" inputmode="numeric" placeholder="O escribe el código de barras">
-      <button class="btn-sec" id="btnAgregarManualVender">Añadir</button>
+    <div class="fila-botones">
+      <button class="btn-sec" id="btnSinCodigoVender">🍅 Sin código</button>
+      <button class="btn-sec" id="btnTecleadoVender">⌨️ Teclear</button>
     </div>
 
     <div class="panel">
@@ -54,39 +104,36 @@
         <button class="btn-texto peligro" id="btnVaciarCarrito">Vaciar</button>
       </div>
       <div id="carrito" class="lista-carrito">
-        <p class="vacio">Escanea productos para empezar a vender.</p>
+        <p class="vacio">Escanea o elige productos para empezar.</p>
       </div>
       <div class="totalizador">
-        <div><span>Piezas</span><b id="carritoPiezas">0</b></div>
+        <div><span>Artículos</span><b id="carritoPiezas">0</b></div>
         <div class="grande"><span>Total</span><b id="carritoTotal">$0.00</b></div>
       </div>
       <div class="fila-cobro">
-        <label>Paga con
-          <input type="number" id="pagaCon" inputmode="decimal" placeholder="0.00" step="0.50">
-        </label>
+        <label>Paga con<input type="number" id="pagaCon" inputmode="decimal" placeholder="0.00" step="0.50"></label>
         <div class="cambio">Cambio<b id="cambio">$0.00</b></div>
       </div>
-      <button class="btn-principal grande" id="btnCobrar">💵 Cobrar venta</button>
+      <button class="btn-principal grande" id="btnCobrar">💵 Cobrar en efectivo</button>
+      <button class="btn-ambar grande" id="btnFiar">🤝 Dar crédito (fiar)</button>
     </div>
   </section>
 
-  <!-- ======================= AGREGAR ======================= -->
+  <!-- ===================== AGREGAR ===================== -->
   <section class="vista" id="vista-agregar">
     <div class="camara">
       <video id="videoAgregar" playsinline muted></video>
       <div class="mira"></div>
-      <div class="camara-vacia" id="avisoAgregar">
-        <p>📷 Escanea un producto para darlo de alta o sumarle piezas</p>
-      </div>
+      <div class="camara-vacia" id="avisoAgregar"><p>📷 Escanea para dar de alta o sumar piezas</p></div>
       <div class="camara-acciones">
         <button class="chip" id="btnCamaraAgregar">▶ Escanear</button>
-        <button class="chip" id="btnLuzAgregar" hidden>🔦 Luz</button>
+        <button class="chip" id="btnLuzAgregar" hidden>🔦</button>
       </div>
     </div>
 
-    <div class="fila-manual">
-      <input type="text" id="codigoManualAgregar" inputmode="numeric" placeholder="O escribe el código de barras">
-      <button class="btn-sec" id="btnBuscarManualAgregar">Buscar</button>
+    <div class="fila-botones">
+      <button class="btn-sec" id="btnSinCodigoAgregar">🍅 Sin código</button>
+      <button class="btn-sec" id="btnTecleadoAgregar">⌨️ Teclear</button>
     </div>
 
     <div class="panel" id="panelProducto" hidden>
@@ -97,38 +144,66 @@
 
       <form id="formProducto" autocomplete="off">
         <input type="hidden" id="fCodigo">
+
         <div class="campo">
           <label for="fNombre">Nombre del producto</label>
           <input type="text" id="fNombre" placeholder="Ej. Coca Cola 600 ml" required>
         </div>
 
         <div class="campo">
-          <label for="fCategoria">Categoría a la que pertenece</label>
+          <label>¿Cómo lo vendes?</label>
+          <div class="segmentado" id="segTipo">
+            <button type="button" data-tipo="pieza" class="activo">Por pieza</button>
+            <button type="button" data-tipo="peso">Por peso</button>
+            <button type="button" data-tipo="paquete">Paquete + pieza</button>
+          </div>
+          <p class="ayuda mini" id="ayudaTipo">Se vende de una en una.</p>
+        </div>
+
+        <div class="campo">
+          <label for="fCategoria">Grupo o categoría</label>
           <div class="fila">
             <select id="fCategoria"></select>
-            <button type="button" class="btn-sec chico" id="btnNuevaCategoria">+ Nueva</button>
+            <button type="button" class="btn-sec chico" id="btnNuevaCategoria">+ Nuevo</button>
+          </div>
+        </div>
+
+        <div id="bloquePaquete" hidden>
+          <div class="campo destacado">
+            <label for="fPiezasPaquete">¿Cuántas piezas trae cada paquete?</label>
+            <input type="number" id="fPiezasPaquete" inputmode="numeric" step="1" min="1" placeholder="Ej. 20 cigarros por cajetilla">
+          </div>
+          <div class="rejilla-2">
+            <div class="campo">
+              <label for="fCostoPaquete">Costo del paquete</label>
+              <input type="number" id="fCostoPaquete" inputmode="decimal" step="0.01" placeholder="0.00">
+            </div>
+            <div class="campo">
+              <label for="fPrecioPaquete">Precio del paquete</label>
+              <input type="number" id="fPrecioPaquete" inputmode="decimal" step="0.01" placeholder="0.00">
+            </div>
           </div>
         </div>
 
         <div class="rejilla-2">
           <div class="campo">
-            <label for="fCosto">Costo por pieza (lo que te cuesta)</label>
+            <label for="fCosto"><span id="etqCosto">Costo por pieza</span></label>
             <input type="number" id="fCosto" inputmode="decimal" step="0.01" placeholder="0.00">
           </div>
           <div class="campo">
-            <label for="fPrecio">Precio de venta</label>
+            <label for="fPrecio"><span id="etqPrecio">Precio por pieza</span></label>
             <input type="number" id="fPrecio" inputmode="decimal" step="0.01" placeholder="0.00">
           </div>
         </div>
 
         <div class="campo destacado">
-          <label for="fPiezas">Piezas que estás agregando</label>
+          <label for="fPiezas"><span id="etqEntrada">Piezas que estás agregando</span></label>
           <div class="contador">
             <button type="button" class="paso" data-paso="-1">−</button>
-            <input type="number" id="fPiezas" inputmode="numeric" value="1" min="0" step="1">
+            <input type="number" id="fPiezas" inputmode="decimal" value="1" min="0" step="1">
             <button type="button" class="paso" data-paso="1">+</button>
           </div>
-          <div class="atajos">
+          <div class="atajos" id="atajosCantidad">
             <button type="button" class="chip mini" data-sumar="5">+5</button>
             <button type="button" class="chip mini" data-sumar="10">+10</button>
             <button type="button" class="chip mini" data-sumar="12">+12</button>
@@ -138,17 +213,21 @@
 
         <div class="rejilla-2">
           <div class="campo">
-            <label for="fMinimo">Avisarme cuando queden menos de</label>
-            <input type="number" id="fMinimo" inputmode="numeric" step="1" placeholder="5">
+            <label for="fMinimo">Avisarme con menos de</label>
+            <input type="number" id="fMinimo" inputmode="decimal" step="1" placeholder="5">
           </div>
           <div class="campo">
-            <label for="fObjetivo">Cantidad ideal en bodega</label>
-            <input type="number" id="fObjetivo" inputmode="numeric" step="1" placeholder="opcional">
+            <label for="fObjetivo">Cantidad ideal</label>
+            <input type="number" id="fObjetivo" inputmode="decimal" step="1" placeholder="opcional">
           </div>
         </div>
 
-        <div class="resumen-linea" id="resumenEntrada"></div>
+        <div class="campo">
+          <label for="fProveedor">¿Quién te lo surte?</label>
+          <select id="fProveedor"></select>
+        </div>
 
+        <p class="resumen-linea" id="resumenEntrada"></p>
         <button type="submit" class="btn-principal grande" id="btnGuardarEntrada">➕ Agregar al inventario</button>
         <button type="button" class="btn-texto" id="btnCancelarEntrada">Cancelar</button>
       </form>
@@ -157,35 +236,33 @@
     <div class="panel suave" id="panelSesion" hidden>
       <h3>Entradas de esta sesión</h3>
       <div class="totalizador">
-        <div><span>Piezas</span><b id="sesionPiezas">0</b></div>
+        <div><span>Artículos</span><b id="sesionPiezas">0</b></div>
         <div><span>Invertido</span><b id="sesionInvertido">$0.00</b></div>
       </div>
       <ul class="lista-simple" id="sesionLista"></ul>
     </div>
   </section>
 
-  <!-- ======================= INVENTARIO ======================= -->
+  <!-- ===================== INVENTARIO ===================== -->
   <section class="vista" id="vista-inventario">
-    <div class="tarjetas-resumen" id="resumenInventario"></div>
-
+    <div class="tarjetas" id="resumenInventario"></div>
     <div class="filtros">
       <input type="search" id="buscarInventario" placeholder="🔎 Buscar por nombre o código">
+      <div class="chips-scroll" id="chipsGrupos"></div>
       <div class="fila">
-        <select id="filtroCategoria"><option value="">Todas las categorías</option></select>
         <select id="ordenInventario">
           <option value="nombre">Ordenar: nombre</option>
           <option value="stock">Menos existencia</option>
           <option value="valor">Mayor inversión</option>
-          <option value="categoria">Categoría</option>
+          <option value="categoria">Grupo</option>
         </select>
+        <label class="check compacto"><input type="checkbox" id="soloBajos"> Solo los que faltan</label>
       </div>
-      <label class="check"><input type="checkbox" id="soloBajos"> Ver solo los que están por acabarse</label>
     </div>
-
     <div id="listaInventario" class="lista-productos"></div>
   </section>
 
-  <!-- ======================= VENTAS ======================= -->
+  <!-- ===================== VENTAS ===================== -->
   <section class="vista" id="vista-ventas">
     <div class="filtros">
       <div class="fila">
@@ -193,62 +270,139 @@
         <label class="campo chico">Al <input type="date" id="ventasHasta"></label>
       </div>
       <div class="atajos">
-        <button class="chip mini" data-rango="hoy">Hoy</button>
+        <button class="chip mini activo" data-rango="hoy">Hoy</button>
         <button class="chip mini" data-rango="ayer">Ayer</button>
         <button class="chip mini" data-rango="semana">7 días</button>
         <button class="chip mini" data-rango="mes">Este mes</button>
       </div>
     </div>
-
-    <div class="tarjetas-resumen" id="resumenVentas"></div>
+    <div class="tarjetas" id="resumenVentas"></div>
+    <div class="panel suave" id="panelHoras" hidden>
+      <h3>Ventas por hora</h3>
+      <div id="graficaHoras" class="grafica"></div>
+      <p class="resumen-linea" id="resumenHoras"></p>
+    </div>
     <div class="panel suave" id="panelDias" hidden>
       <h3>Por día</h3>
       <div id="listaDias" class="lista-dias"></div>
     </div>
-
     <div class="panel-titulo compacto"><h2>Tickets</h2><span id="conteoTickets" class="etiqueta"></span></div>
     <div id="listaVentas" class="lista-ventas"></div>
   </section>
 
-  <!-- ======================= MÁS ======================= -->
-  <section class="vista" id="vista-mas">
+  <!-- ===================== CRÉDITOS ===================== -->
+  <section class="vista" id="vista-creditos">
+    <div class="tarjetas" id="resumenCreditos"></div>
+    <div class="fila-botones">
+      <button class="btn-sec" id="btnNuevoCliente">👤 Nuevo cliente</button>
+      <button class="btn-sec" id="btnPDFCreditos">📄 PDF de fiados</button>
+    </div>
+    <div class="atajos">
+      <button class="chip mini activo" data-credito="pendientes">Deben</button>
+      <button class="chip mini" data-credito="vencidos">Vencidos</button>
+      <button class="chip mini" data-credito="pagados">Pagados</button>
+      <button class="chip mini" data-credito="clientes">Clientes</button>
+    </div>
+    <div id="listaCreditos" class="lista-ventas"></div>
+  </section>
+
+  <!-- ===================== AGENDA ===================== -->
+  <section class="vista" id="vista-agenda">
+    <div class="calendario">
+      <div class="cal-cabeza">
+        <button class="icono chico" id="calAtras">‹</button>
+        <strong id="calMes"></strong>
+        <button class="icono chico" id="calAdelante">›</button>
+      </div>
+      <div class="cal-dias" id="calDias"></div>
+      <div class="cal-rejilla" id="calRejilla"></div>
+    </div>
+    <div class="fila-botones">
+      <button class="btn-principal" id="btnNuevaVisita">📅 Agendar visita de proveedor</button>
+    </div>
     <div class="panel">
-      <h2>📄 Lista de compras en PDF</h2>
-      <p class="ayuda">Escoge hasta cuántas piezas quieres ver. Ejemplo: escribe <b>15</b> y el PDF trae todos los productos donde ya quedan 15 piezas o menos, con lo que conviene comprar.</p>
+      <div class="panel-titulo"><h2 id="tituloDiaAgenda">Pendientes</h2></div>
+      <div id="listaAgenda"></div>
+    </div>
+    <div class="panel">
+      <div class="panel-titulo">
+        <h2>Mis proveedores</h2>
+        <button class="btn-texto" id="btnNuevoProveedor">+ Agregar</button>
+      </div>
+      <div id="listaProveedores"></div>
+    </div>
+  </section>
+
+  <!-- ===================== CAJA ===================== -->
+  <section class="vista" id="vista-caja">
+    <div class="panel" id="panelCaja"></div>
+    <div class="panel">
+      <div class="panel-titulo"><h2>Cortes anteriores</h2></div>
+      <div id="listaCortes"></div>
+    </div>
+  </section>
+
+  <!-- ===================== REPORTES ===================== -->
+  <section class="vista" id="vista-reportes">
+    <div class="panel">
+      <h2>📄 Lista de compras para el proveedor</h2>
+      <p class="ayuda">Escribe hasta cuántas piezas quieres ver. Ejemplo: <b>15</b> trae todos los productos donde ya quedan 15 o menos, con lo que conviene comprar.</p>
       <div class="rejilla-2">
         <div class="campo">
-          <label for="umbralPDF">Mostrar productos con ... piezas o menos</label>
+          <label for="umbralPDF">Con ... piezas o menos</label>
           <input type="number" id="umbralPDF" inputmode="numeric" value="15" min="0" step="1">
         </div>
         <div class="campo">
-          <label for="categoriaPDF">Categoría</label>
-          <select id="categoriaPDF"><option value="">Todas</option></select>
+          <label for="categoriaPDF">Grupo</label>
+          <select id="categoriaPDF"><option value="">Todos</option></select>
         </div>
       </div>
       <p class="resumen-linea" id="vistaPreviaPDF"></p>
-      <div class="fila">
+      <div class="fila-botones">
         <button class="btn-principal" id="btnPDFCompras">Descargar PDF</button>
         <button class="btn-sec" id="btnCompartirCompras">Compartir</button>
       </div>
     </div>
 
     <div class="panel">
-      <h2>📦 Otros reportes</h2>
+      <h2>📆 Periodo de los reportes</h2>
       <div class="fila">
-        <button class="btn-sec" id="btnPDFInventario">Inventario completo</button>
-        <button class="btn-sec" id="btnPDFVentas">Ventas del periodo</button>
+        <label class="campo chico">Del <input type="date" id="repDesde"></label>
+        <label class="campo chico">Al <input type="date" id="repHasta"></label>
+      </div>
+      <div class="atajos">
+        <button class="chip mini" data-rep="hoy">Hoy</button>
+        <button class="chip mini activo" data-rep="semana">Esta semana</button>
+        <button class="chip mini" data-rep="mes">Este mes</button>
+        <button class="chip mini" data-rep="mespasado">Mes pasado</button>
       </div>
     </div>
 
     <div class="panel">
-      <h2>⚙️ Ajustes</h2>
+      <h2>📊 Descargar reportes</h2>
+      <div class="lista-reportes">
+        <button class="reporte" id="btnPDFVentas"><i>💰</i><span><b>Ventas del periodo</b><small>Día por día, ganancia y más vendidos</small></span></button>
+        <button class="reporte" id="btnPDFHoras"><i>🕐</i><span><b>Ventas por hora</b><small>A qué hora vendes más y cuándo hay más clientes</small></span></button>
+        <button class="reporte" id="btnPDFSemanal"><i>📅</i><span><b>Acumulado semanal</b><small>Semana por semana del periodo</small></span></button>
+        <button class="reporte" id="btnPDFMensual"><i>🗓️</i><span><b>Acumulado mensual</b><small>Mes por mes del periodo</small></span></button>
+        <button class="reporte" id="btnPDFInventario"><i>📦</i><span><b>Inventario completo</b><small>Todo lo que tienes y cuánto vale</small></span></button>
+        <button class="reporte" id="btnPDFFiados"><i>🤝</i><span><b>Fiados pendientes</b><small>Quién debe, cuánto y desde cuándo</small></span></button>
+        <button class="reporte" id="btnPDFCorte"><i>💵</i><span><b>Corte de caja</b><small>Del último día cerrado</small></span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== AJUSTES ===================== -->
+  <section class="vista" id="vista-ajustes">
+    <div class="panel">
+      <h2>⚙️ Mi tienda</h2>
       <div class="campo">
         <label for="cfgTienda">Nombre de la tienda</label>
         <input type="text" id="cfgTienda">
       </div>
       <div class="rejilla-2">
         <div class="campo">
-          <label for="cfgMoneda">Símbolo de moneda</label>
+          <label for="cfgMoneda">Moneda</label>
           <input type="text" id="cfgMoneda" maxlength="3">
         </div>
         <div class="campo">
@@ -256,24 +410,35 @@
           <input type="number" id="cfgMinimo" inputmode="numeric" step="1">
         </div>
       </div>
-      <label class="check"><input type="checkbox" id="cfgSonido"> Pitido al escanear</label>
+      <div class="rejilla-2">
+        <div class="campo">
+          <label for="cfgDiasCredito">Días para pagar un fiado</label>
+          <input type="number" id="cfgDiasCredito" inputmode="numeric" step="1">
+        </div>
+        <div class="campo">
+          <label for="cfgAvisarVisita">Avisar visitas con (días)</label>
+          <input type="number" id="cfgAvisarVisita" inputmode="numeric" step="1">
+        </div>
+      </div>
+      <label class="check"><input type="checkbox" id="cfgSonido"> Pitido al escanear y en los avisos</label>
       <label class="check"><input type="checkbox" id="cfgVibrar"> Vibrar al escanear</label>
-      <label class="check"><input type="checkbox" id="cfgNegativo"> Permitir vender aunque no haya existencia</label>
+      <label class="check"><input type="checkbox" id="cfgNegativo"> Permitir vender sin existencia</label>
     </div>
 
     <div class="panel">
-      <h2>🏷️ Categorías</h2>
+      <h2>🏷️ Grupos de productos</h2>
+      <p class="ayuda">Sirven para ordenar el inventario y para armar los pedidos por proveedor.</p>
       <div id="listaCategorias" class="chips"></div>
       <div class="fila">
-        <input type="text" id="nuevaCategoria" placeholder="Nueva categoría">
+        <input type="text" id="nuevaCategoria" placeholder="Nuevo grupo">
         <button class="btn-sec" id="btnAgregarCategoria">Agregar</button>
       </div>
     </div>
 
     <div class="panel">
       <h2>💾 Respaldo</h2>
-      <p class="ayuda">Todo se guarda dentro de tu celular. Haz un respaldo de vez en cuando y guárdalo en tu WhatsApp o Google Drive.</p>
-      <div class="fila">
+      <p class="ayuda">Todo vive dentro de tu celular. Descarga un respaldo seguido y guárdalo en WhatsApp o Drive.</p>
+      <div class="fila-botones">
         <button class="btn-sec" id="btnExportar">Descargar respaldo</button>
         <button class="btn-sec" id="btnImportar">Restaurar respaldo</button>
         <input type="file" id="archivoImportar" accept="application/json,.json" hidden>
@@ -281,16 +446,16 @@
       <button class="btn-texto peligro" id="btnBorrarTodo">Borrar todos los datos</button>
     </div>
 
-    <p class="pie">Inventario de abarrotes · funciona sin internet · versión 1.0</p>
+    <p class="pie">Inventario de abarrotes · funciona sin internet · versión 2.0</p>
   </section>
 </main>
 
 <nav class="barra-inferior">
-  <button class="tab activa" data-vista="vender"><span>🛒</span>Vender</button>
+  <button class="tab activa" data-vista="inicio"><span>🏠</span>Inicio</button>
+  <button class="tab" data-vista="vender"><span>🛒</span>Vender</button>
   <button class="tab" data-vista="agregar"><span>➕</span>Agregar</button>
-  <button class="tab" data-vista="inventario"><span>📦</span>Inventario<i class="punto oculto" id="puntoInventario"></i></button>
-  <button class="tab" data-vista="ventas"><span>💰</span>Ventas</button>
-  <button class="tab" data-vista="mas"><span>⋯</span>Más</button>
+  <button class="tab" data-vista="inventario"><span>📦</span>Productos<i class="punto oculto" id="puntoInventario"></i></button>
+  <button class="tab" id="tabMenu"><span>☰</span>Menú</button>
 </nav>
 
 <div id="aviso" class="aviso"></div>
@@ -299,6 +464,10 @@
 <script src="js/db.js"></script>
 <script src="js/scanner.js"></script>
 <script src="js/reportes.js"></script>
+<script src="js/nucleo.js"></script>
+<script src="js/venta.js"></script>
+<script src="js/inventario.js"></script>
+<script src="js/gestion.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

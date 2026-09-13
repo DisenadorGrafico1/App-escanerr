@@ -57,6 +57,14 @@ const Escaner = (() => {
     vibrar([40, 50, 80]);
   }
 
+  /** Campanita de aviso: producto por acabarse, visita o cobro pendiente. */
+  function campana() {
+    tono(880, 160, 0.22);
+    setTimeout(() => tono(1175, 160, 0.22), 170);
+    setTimeout(() => tono(1568, 260, 0.2), 340);
+    vibrar([80, 60, 80]);
+  }
+
   /** Despierta el audio dentro de un gesto del usuario (iOS lo exige). */
   function prepararAudio() {
     try {
@@ -206,7 +214,7 @@ const Escaner = (() => {
 
   return {
     iniciar, detener, estaActivo, configurar, prepararAudio,
-    pitido, pitidoError, pitidoExito,
+    pitido, pitidoError, pitidoExito, campana,
     soportaLinterna, alternarLinterna, limpiarUltimo
   };
 })();

@@ -1,13 +1,13 @@
 {
   "name": "Mi Tienda · Inventario y Ventas",
   "short_name": "Mi Tienda",
-  "description": "Inventario, escáner de código de barras y control de ventas para tiendas de abarrotes. Funciona sin internet.",
+  "description": "Inventario, escáner de código de barras, ventas, fiados y agenda de proveedores para tu tienda. Funciona sin internet.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f3f6f4",
-  "theme_color": "#16805c",
+  "background_color": "#F5F3FA",
+  "theme_color": "#5B2C91",
   "lang": "es-MX",
   "categories": ["business", "productivity", "shopping"],
   "icons": [
@@ -17,6 +17,7 @@
   ],
   "shortcuts": [
     { "name": "Vender", "url": "./index.html#vender" },
-    { "name": "Agregar productos", "url": "./index.html#agregar" }
+    { "name": "Agregar productos", "url": "./index.html#agregar" },
+    { "name": "Fiados", "url": "./index.html#creditos" }
   ]
 }
