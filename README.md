@@ -116,6 +116,21 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
+## 🔄 ¿Actualizar borra mis datos?
+
+**No.** Actualizar cambia solo el programa (los archivos que están en GitHub).
+Tus productos, ventas, fiados, clientes y cortes viven en una base de datos
+dentro del celular (IndexedDB) que la actualización no toca; los productos
+viejos se adaptan solos al formato nuevo.
+
+Está comprobado con una prueba automática (`npm run prueba-actualizacion`) que
+instala la versión anterior, registra productos y ventas, le encima la versión
+nueva y verifica que todo siga ahí y se pueda seguir vendiendo.
+
+Lo que sí borra los datos es **borrar los datos del sitio en Chrome**,
+desinstalar la app borrando su almacenamiento, o usar el botón
+*Borrar todos los datos* de Ajustes. Por eso: respalda.
+
 ## 💾 Muy importante: haz respaldos
 
 Los datos viven **dentro del celular**. Si borras los datos de Chrome o pierdes
@@ -157,6 +172,7 @@ npm install
 npm test               # 21 pruebas de inventario, ventas, fiados, agenda y corte
 npm run prueba-app     # recorre toda la app en Chromium (alta, venta, fiado, corte, PDF)
 npm run prueba-camara  # prueba el escáner con una cámara simulada
+npm run prueba-actualizacion  # comprueba que actualizar no borra lo registrado
 npm run servir         # servidor local en http://localhost:8080
 ```
 

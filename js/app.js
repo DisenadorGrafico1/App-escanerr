@@ -153,6 +153,42 @@
     }, 30 * 60 * 1000);
   }
 
+  /* ===================== actualizaciones ===================== */
+
+  /**
+   * Registra el service worker y busca versiones nuevas al abrir la app.
+   * Sin este "update()" el navegador puede tardar días en darse cuenta de
+   * que hay una versión nueva, porque sirve todo desde su copia guardada.
+   *
+   * Importante: actualizar cambia SOLO el programa. Los productos, ventas,
+   * fiados y ajustes viven en la base de datos del celular y no se tocan.
+   */
+  function prepararActualizaciones() {
+    navigator.serviceWorker.register('sw.js').then((registro) => {
+      registro.update().catch(() => {});
+      // Y cada media hora, por si la tienda deja la app abierta todo el día.
+      setInterval(() => registro.update().catch(() => {}), 30 * 60 * 1000);
+    }).catch(() => {});
+
+    // La primera vez que se instala también avisa "controllerchange", y eso
+    // no es una actualización: solo cuenta si ya había una versión mandando.
+    let habiaVersion = !!navigator.serviceWorker.controller;
+    let yaAvise = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!habiaVersion) { habiaVersion = true; return; }
+      if (yaAvise) return;
+      yaAvise = true;
+      const ocupado = estado.carrito.length > 0 || !$('#modal').classList.contains('oculto');
+      if (ocupado) {
+        // En media venta no se recarga sola: se avisa y ya.
+        aviso('Hay una versión nueva lista: ciérrala y ábrela cuando termines');
+      } else {
+        aviso('Actualizando la app…', 'exito');
+        setTimeout(() => location.reload(), 900);
+      }
+    });
+  }
+
   /* ===================== arranque ===================== */
 
   async function iniciar() {
@@ -179,7 +215,8 @@
       if (document.hidden && Escaner.estaActivo()) Escaner.detener().then(App.pintarBotonesCamara);
     });
 
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in navigator) prepararActualizaciones();
+
     if (!window.isSecureContext) aviso('Abre la app con https:// para poder usar la cámara', 'error');
   }
 
