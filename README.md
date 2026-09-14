@@ -182,6 +182,27 @@ Lo que sí borra los datos es **borrar los datos del sitio en Chrome**,
 desinstalar la app borrando su almacenamiento, o usar el botón
 *Borrar todos los datos* de Ajustes. Por eso: respalda.
 
+## 🔒 ¿Se mantienen los datos guardados?
+
+Sí, mientras la app esté **instalada** en la pantalla de inicio:
+
+| Situación | ¿Se conservan? |
+|---|---|
+| Android, instalada | ✅ Sí, indefinidamente |
+| Android, solo en Chrome | ✅ Casi siempre (podrían borrarse si el celular se queda sin espacio) |
+| iPhone, instalada en inicio | ✅ Sí |
+| iPhone, solo en Safari | ⚠️ No: iOS borra los datos si pasas ~7 días sin abrirla |
+| Se actualiza la app | ✅ Sí, la actualización no toca los datos |
+| Se apaga o reinicia el celular | ✅ Sí |
+| Borras los datos del sitio en Chrome/Safari | ❌ Se pierden |
+| Desinstalas la app o pierdes el celular | ❌ Se pierden |
+
+La app además le **pide al sistema que marque los datos como protegidos**
+(`navigator.storage.persist()`), para que no los borre al hacer espacio. En
+**Ajustes → Respaldo** ves el estado real de tu celular: si dice
+*"🔒 Datos protegidos"* el sistema ya se comprometió a no borrarlos; si dice
+*"⚠️ Datos sin proteger"*, instálala desde el icono y toca el botón.
+
 ## 💾 Muy importante: haz respaldos
 
 Los datos viven **dentro del celular**. Si borras los datos de Chrome o pierdes

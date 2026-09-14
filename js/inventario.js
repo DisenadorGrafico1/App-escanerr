@@ -440,6 +440,7 @@
       pintarPrecision(cfg.precisionEscaner || 'normal');
       if (App.pintarVersion) App.pintarVersion();
       if (App.pintarInstalar) App.pintarInstalar();
+      if (App.pintarAlmacen) App.pintarAlmacen();
       pintarCategorias();
     }
   };

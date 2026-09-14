@@ -211,6 +211,60 @@
       'Queda con su icono y abre sin internet.</p>';
   }
 
+  /* ===================== protección de los datos ===================== */
+
+  /**
+   * Le pide al sistema que marque los datos como "persistentes": así el
+   * navegador no los borra para hacer espacio, ni por dejar de usar la app
+   * unos días. Los navegadores lo conceden sobre todo si la app está
+   * instalada en la pantalla de inicio.
+   */
+  async function protegerDatos(pedirlo) {
+    if (!navigator.storage || !navigator.storage.persist) return null;
+    try {
+      let protegido = navigator.storage.persisted ? await navigator.storage.persisted() : false;
+      if (!protegido && pedirlo !== false) protegido = await navigator.storage.persist();
+      return protegido;
+    } catch (e) { return null; }
+  }
+
+  function tamanoLegible(bytes) {
+    if (!bytes) return '0 MB';
+    const mb = bytes / (1024 * 1024);
+    return mb < 1 ? Math.round(bytes / 1024) + ' KB' : (mb < 10 ? mb.toFixed(1) : Math.round(mb)) + ' MB';
+  }
+
+  /** Muestra en Ajustes si los datos están a salvo y cuánto espacio usan. */
+  async function pintarAlmacen() {
+    const el = $('#estadoAlmacen');
+    const boton = $('#btnProteger');
+    if (!el) return;
+
+    const protegido = await protegerDatos(false);
+    let uso = '';
+    try {
+      if (navigator.storage && navigator.storage.estimate) {
+        const e = await navigator.storage.estimate();
+        if (e && e.usage) uso = ' · ocupan ' + tamanoLegible(e.usage);
+      }
+    } catch (e) {}
+
+    if (protegido === true) {
+      el.innerHTML = '🔒 <b>Datos protegidos</b>: el sistema no los va a borrar solo' + uso + '.';
+      if (boton) boton.hidden = true;
+    } else if (protegido === false) {
+      el.innerHTML = '⚠️ <b>Datos sin proteger</b>: si el celular se queda sin espacio, o pasas ' +
+        'muchos días sin abrir la app, el sistema podría borrarlos' + uso + '. ' +
+        'Instálala en la pantalla de inicio y toca el botón de abajo.';
+      if (boton) boton.hidden = false;
+    } else {
+      el.innerHTML = 'Este navegador no informa el estado del almacenamiento' + uso +
+        '. Respalda seguido para no depender de eso.';
+      if (boton) boton.hidden = true;
+    }
+  }
+  App.pintarAlmacen = pintarAlmacen;
+
   /* ===================== versión y actualizaciones ===================== */
 
   /** Deja a la vista qué versión trae el celular: sirve para no adivinar. */
@@ -301,11 +355,18 @@
     App.conectarGestion();
     conectarReportes();
     $('#btnBuscarActualizacion').onclick = buscarActualizacion;
+    $('#btnProteger').onclick = async () => {
+      const ok = await protegerDatos(true);
+      await pintarAlmacen();
+      App.aviso(ok ? 'Datos protegidos en este celular' : 'El sistema no lo concedió: instala la app desde su icono',
+        ok ? 'exito' : 'error');
+    };
     pintarVersion();
     pintarInstalar();
 
     await refrescar(false);
     await ir('inicio');
+    protegerDatos(true);   // se pide al arrancar; el sistema decide
 
     prepararSonidoDeAvisos();
     revisarAvisosPeriodicamente();
