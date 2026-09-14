@@ -11,10 +11,25 @@ agenda de proveedores y el corte de caja.
 
 ## 📱 Cómo ponerla en tu celular
 
-1. Abre el enlace de arriba **en Chrome de tu celular**.
-2. Toca el menú de Chrome (⋮) → **Agregar a pantalla principal**.
-3. Ábrela desde el icono morado. La primera vez que toques **Escanear**,
-   Chrome te pedirá permiso para la cámara: dale **Permitir**.
+### Android (Chrome)
+1. Abre el enlace de arriba **en Chrome**.
+2. Menú **⋮** → **Agregar a pantalla principal** (o el botón *Instalar app*
+   que aparece en Ajustes).
+3. Ábrela desde el icono morado y dale **Permitir** a la cámara.
+
+### iPhone / iPad (Safari)
+1. Abre el enlace **en Safari** (en iPhone solo Safari la instala bien).
+2. Toca **Compartir** (el cuadrito con la flecha ↑) → **Agregar a inicio**.
+3. Ábrela desde el icono y dale **Permitir** a la cámara.
+
+> **En iPhone es importante instalarla.** Si la dejas solo abierta en Safari y
+> pasas varios días sin entrar, el sistema puede borrar los datos guardados.
+> Instalada en la pantalla de inicio, no los borra.
+
+Qué cambia en iPhone: no hay lector de códigos del sistema (usa el motor
+incluido, un poco más lento pero igual de exacto), no hay vibración al
+escanear (el pitido sí) y no hay botón de linterna. Todo lo demás —inventario,
+ventas, fiados, agenda, cortes y PDF— funciona igual.
 
 Después de la primera vez funciona **sin internet**: la app queda guardada
 dentro del teléfono.

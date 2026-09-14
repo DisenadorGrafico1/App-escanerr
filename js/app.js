@@ -153,6 +153,64 @@
     }, 30 * 60 * 1000);
   }
 
+  /* ===================== instalación en el celular ===================== */
+
+  const esIPhone = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function yaInstalada() {
+    return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+      navigator.standalone === true;
+  }
+
+  let eventoInstalar = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    eventoInstalar = e;
+    pintarInstalar();
+  });
+
+  /** Explica cómo instalarla según el celular (Android e iPhone son distintos). */
+  function pintarInstalar() {
+    const cont = $('#panelInstalar');
+    if (!cont) return;
+
+    if (yaInstalada()) {
+      cont.innerHTML = '<h2>📲 Instalación</h2>' +
+        '<p class="ayuda">✅ Ya está instalada en este celular: se abre desde su icono y funciona sin internet.</p>';
+      return;
+    }
+
+    if (esIPhone) {
+      cont.innerHTML = '<h2>📲 Instalar en tu iPhone</h2>' +
+        '<p class="ayuda">Hazlo desde <b>Safari</b> (en iPhone solo Safari la instala bien):</p>' +
+        '<ul class="lista-simple">' +
+          '<li><span>1. Toca <b>Compartir</b> (el cuadrito con la flecha ↑, abajo)</span></li>' +
+          '<li><span>2. Baja y toca <b>Agregar a inicio</b></span></li>' +
+          '<li><span>3. Toca <b>Agregar</b> y ábrela desde su icono</span></li>' +
+        '</ul>' +
+        '<p class="ayuda" style="margin-top:10px">⚠️ En iPhone es <b>importante</b> abrirla siempre desde el icono: si la usas dentro de Safari y pasas varios días sin entrar, el sistema puede borrar los datos guardados. Instalada, no.</p>';
+      return;
+    }
+
+    if (eventoInstalar) {
+      cont.innerHTML = '<h2>📲 Instalar en el celular</h2>' +
+        '<p class="ayuda">Queda con su icono y abre sin internet, como cualquier app.</p>' +
+        '<button class="btn-principal" id="btnInstalarApp">Instalar app</button>';
+      $('#btnInstalarApp').onclick = async () => {
+        eventoInstalar.prompt();
+        await eventoInstalar.userChoice;
+        eventoInstalar = null;
+        pintarInstalar();
+      };
+      return;
+    }
+
+    cont.innerHTML = '<h2>📲 Instalar en el celular</h2>' +
+      '<p class="ayuda">Desde <b>Chrome</b>: menú <b>⋮</b> → <b>Agregar a pantalla principal</b>. ' +
+      'Queda con su icono y abre sin internet.</p>';
+  }
+
   /* ===================== versión y actualizaciones ===================== */
 
   /** Deja a la vista qué versión trae el celular: sirve para no adivinar. */
@@ -167,6 +225,7 @@
     el('#pieVersion', 'Inventario de abarrotes · ' + v + ' · ' + App.FECHA_VERSION);
   }
   App.pintarVersion = pintarVersion;
+  App.pintarInstalar = pintarInstalar;
 
   async function buscarActualizacion() {
     const estadoEl = $('#estadoActualizacion');
@@ -243,6 +302,7 @@
     conectarReportes();
     $('#btnBuscarActualizacion').onclick = buscarActualizacion;
     pintarVersion();
+    pintarInstalar();
 
     await refrescar(false);
     await ir('inicio');
