@@ -12,6 +12,16 @@ import { readFile, access, readdir } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Este celular se simula ya activado (con la llave del dueño), para que la
+// bienvenida de la versión de prueba no estorbe en las comprobaciones.
+const YA_ACTIVADO = () => {
+  try {
+    localStorage.setItem('tienda-prueba', JSON.stringify({
+      liberado: true, revisadoInicial: true, bienvenida: true, usadosMs: 0, bloqueado: false
+    }));
+  } catch (e) {}
+};
+
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const VIDEO = '/tmp/barras.y4m';
 const PUERTO = 8098;
@@ -57,6 +67,7 @@ const navegador = await chromium.launch({
          '--use-file-for-fake-video-capture=' + VIDEO, '--autoplay-policy=no-user-gesture-required']
 });
 const ctx = await navegador.newContext({ viewport: { width: 412, height: 880 }, permissions: ['camera'] });
+await ctx.addInitScript(YA_ACTIVADO);
 const page = await ctx.newPage();
 const errores = [];
 page.on('pageerror', (e) => errores.push(e.message));

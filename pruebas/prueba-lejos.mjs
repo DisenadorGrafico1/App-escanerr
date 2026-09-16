@@ -10,6 +10,16 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// Este celular se simula ya activado (con la llave del dueño), para que la
+// bienvenida de la versión de prueba no estorbe en las comprobaciones.
+const YA_ACTIVADO = () => {
+  try {
+    localStorage.setItem('tienda-prueba', JSON.stringify({
+      liberado: true, revisadoInicial: true, bienvenida: true, usadosMs: 0, bloqueado: false
+    }));
+  } catch (e) {}
+};
+
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PUERTO = 8086;
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
@@ -50,6 +60,7 @@ async function abrirCon(video) {
            '--use-file-for-fake-video-capture=' + video, '--autoplay-policy=no-user-gesture-required']
   });
   const ctx = await navegador.newContext({ viewport: { width: 412, height: 900 }, permissions: ['camera'] });
+  await ctx.addInitScript(YA_ACTIVADO);
   const page = await ctx.newPage();
   await page.goto('http://localhost:' + PUERTO + '/index.html');
   await page.waitForTimeout(700);

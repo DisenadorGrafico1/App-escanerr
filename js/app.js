@@ -153,14 +153,14 @@
     }, 30 * 60 * 1000);
   }
 
-  /* ===================== modo demostración ===================== */
+  /* ===================== versión de prueba ===================== */
 
   /** Cintillo con el tiempo que le queda a la prueba. */
   function pintarChipDemo() {
     const chip = $('#chipDemo');
     const d = Demo.estado();
     if (!chip) return;
-    if (!d || !d.activo || d.bloqueado) { chip.classList.add('oculto'); return; }
+    if (!d || d.liberado || d.bloqueado) { chip.classList.add('oculto'); return; }
     chip.classList.remove('oculto');
     chip.textContent = '⏳ ' + Demo.textoRestante();
     chip.classList.toggle('poco', Demo.restanteMs() < 5 * 60000);
@@ -172,78 +172,47 @@
     const d = Demo.estado() || {};
     pintarChipDemo();
 
-    if (d.activo) {
-      cont.innerHTML = '<h2>🔑 Prueba en curso</h2>' +
-        '<div class="totalizador">' +
-          '<div><span>Le quedan</span><b>' + Demo.textoRestante() + '</b></div>' +
-          '<div><span>De</span><b>' + d.minutos + ' min</b></div>' +
-        '</div>' +
-        '<p class="ayuda">Cuando se acabe el tiempo, la app se bloquea y pide tu PIN. Lo registrado no se borra.</p>' +
-        '<div class="fila-botones">' +
-          '<button class="btn-sec" id="btnMasMinutos">+10 minutos</button>' +
-          '<button class="btn-sec" id="btnTerminarDemo">Terminar prueba</button>' +
-        '</div>';
-      $('#btnMasMinutos').onclick = async () => {
-        await Demo.agregarMinutos(10);
+    if (d.liberado) {
+      cont.innerHTML = '<h2>✅ Versión completa</h2>' +
+        '<p class="ayuda">Este celular tiene la app activada, sin límite de tiempo.</p>' +
+        '<button class="btn-texto" id="btnVolverPrueba">Ver cómo la vive un cliente (modo prueba)</button>';
+      $('#btnVolverPrueba').onclick = async () => {
+        const ok = await App.confirmar('Poner este celular en modo prueba',
+          'Verás la app como la ve un cliente: ' + Demo.minutos() + ' minutos y luego se bloquea. ' +
+          'Con tu llave la vuelves a activar cuando quieras.', 'Sí, ponerlo en prueba');
+        if (!ok) return;
+        await Demo.volverAPrueba();
         pintarDemo();
-        aviso('Se agregaron 10 minutos', 'exito');
+        aviso('Este celular quedó en modo prueba');
       };
-      $('#btnTerminarDemo').onclick = pedirPinParaTerminar;
       return;
     }
 
-    cont.innerHTML = '<h2>🔑 Modo demostración</h2>' +
-      '<p class="ayuda">Para prestarle el celular a un cliente: la app funciona los minutos que elijas y después se bloquea con tu PIN.</p>' +
-      '<div class="rejilla-2">' +
-        '<div class="campo"><label>Minutos de prueba</label>' +
-          '<input type="number" id="demoMinutos" inputmode="numeric" min="1" step="1" value="30"></div>' +
-        '<div class="campo"><label>PIN para desbloquear</label>' +
-          '<input type="password" id="demoPin" inputmode="numeric" placeholder="mínimo 4 dígitos"></div>' +
+    cont.innerHTML = '<h2>⏳ Versión de prueba</h2>' +
+      '<div class="totalizador">' +
+        '<div><span>Te queda</span><b>' + Demo.textoRestante() + '</b></div>' +
+        '<div><span>De</span><b>' + Demo.minutos() + ' min</b></div>' +
       '</div>' +
-      '<p class="ayuda">⚠️ Anota tu PIN: sin él, la única forma de desbloquear sería borrar los datos de la app.</p>' +
-      '<button class="btn-principal" id="btnIniciarDemo">Iniciar prueba</button>';
+      '<p class="ayuda">El tiempo corre solo mientras usas la app. Lo que registres no se borra.</p>' +
+      '<div class="campo"><label>¿Tienes la llave de activación?</label>' +
+        '<input type="password" id="llaveDemo" placeholder="llave" autocomplete="off"></div>' +
+      '<button class="btn-principal" id="btnActivarDemo">Activar versión completa</button>';
 
-    $('#btnIniciarDemo').onclick = async () => {
-      const minutos = parseInt($('#demoMinutos').value, 10) || 30;
-      const pin = $('#demoPin').value;
-      try {
-        await Demo.iniciar(minutos, pin);
+    $('#btnActivarDemo').onclick = async () => {
+      const boton = $('#btnActivarDemo');
+      boton.disabled = true;
+      aviso('Comprobando…');
+      if (await Demo.llaveCorrecta($('#llaveDemo').value)) {
+        await Demo.liberar();
         pintarDemo();
-        abrirModal('<h2>🔑 Prueba activada</h2>' +
-          '<p class="sub">La app funcionará ' + minutos + ' minutos de uso y luego se bloqueará.</p>' +
-          '<div class="panel"><ul class="lista-simple">' +
-            '<li><span>El tiempo corre solo con la app abierta</span><b>⏳</b></li>' +
-            '<li><span>Arriba se ve cuánto le queda</span><b>👀</b></li>' +
-            '<li><span>Al bloquearse, tu PIN la desbloquea</span><b>🔑</b></li>' +
-            '<li><span>Lo que registre el cliente no se borra</span><b>💾</b></li>' +
-          '</ul></div>' +
-          '<button class="btn-principal" id="mOk">Entendido, ya puedo prestarla</button>');
-        $('#mOk').onclick = cerrarModal;
-      } catch (e) {
-        aviso(e.message, 'error');
+        aviso('¡Listo! Este celular ya tiene la versión completa', 'exito');
+      } else {
+        aviso('Esa llave no es correcta', 'error');
+        boton.disabled = false;
       }
     };
   }
   App.pintarDemo = pintarDemo;
-
-  function pedirPinParaTerminar() {
-    abrirModal('<h2>Terminar la prueba</h2>' +
-      '<p class="sub">Escribe tu PIN para quitar el modo demostración.</p>' +
-      '<div class="campo"><label>PIN</label><input type="password" id="mPin" inputmode="numeric"></div>' +
-      '<button class="btn-principal" id="mOk">Quitar el modo prueba</button>' +
-      '<button class="btn-texto" id="mNo">Cancelar</button>');
-    $('#mNo').onclick = cerrarModal;
-    $('#mOk').onclick = async () => {
-      if (await Demo.pinCorrecto($('#mPin').value)) {
-        await Demo.terminar();
-        cerrarModal();
-        pintarDemo();
-        aviso('Modo prueba desactivado', 'exito');
-      } else {
-        aviso('Ese PIN no es correcto', 'error');
-      }
-    };
-  }
 
   /* ===================== instalación en el celular ===================== */
 

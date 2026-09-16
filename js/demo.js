@@ -1,32 +1,49 @@
 /*
- * demo.js — Modo demostración: la app funciona X minutos y luego se bloquea.
+ * demo.js — Versión de prueba para quien abra el enlace.
  *
- * Pensado para prestarle el celular a un cliente y que la pruebe. Al terminar
- * el tiempo aparece una pantalla de bloqueo; el dueño la quita con su PIN.
+ * Cualquier persona que abra la app desde el enlace público la puede usar
+ * 30 MINUTOS DE USO. Al terminarse, se bloquea con una pantalla que invita a
+ * pedir la versión completa.
  *
- * Detalles importantes:
- *  - Cuenta MINUTOS DE USO: el reloj solo corre con la app abierta y a la vista.
- *  - Si alguien mueve la hora del celular hacia atrás, no gana tiempo.
- *  - El PIN lo elige el dueño y aquí solo se guarda su huella (SHA-256), así
- *    que ni leyendo el código del repositorio se puede sacar.
- *  - Es un candado de cortesía para una demostración, no una protección
- *    contra alguien técnico: borrando los datos del navegador se reinicia.
+ * El dueño desbloquea su propio celular con su llave, una sola vez, y ese
+ * dispositivo queda con la versión completa para siempre. La llave se puede
+ * escribir en la pantalla de bloqueo o venir en el enlace (?llave=...).
+ *
+ * Cómo se guarda la llave: aquí NO está la llave, solo su huella calculada
+ * con PBKDF2-SHA256 y 150 000 vueltas. Aunque este código es público, de la
+ * huella no se puede sacar la llave.
+ *
+ * Alcance honesto: es un candado de cortesía. Alguien técnico podría borrar
+ * los datos del navegador y empezar otra prueba. Para enseñar la app a un
+ * cliente cumple de sobra.
  */
 const Demo = (() => {
-  const CLAVE_LOCAL = 'tienda-demo';
-  const TIC = 5000;          // cada cuánto se suma tiempo (ms)
-  const GUARDADO = 15000;    // cada cuánto se guarda en la base (ms)
+  const MINUTOS = 30;                 // duración de la prueba
+  const ITERACIONES = 150000;
+  const SAL = '5a4df265f7be5bf7316a95e841a0a77e';
+  const HUELLA = '171e8521aa0c1195ceb405b987b77779ea6a03bd65d608a79d830731b27c7dcd';
 
-  let estado = null;         // copia en memoria de la configuración
+  const CLAVE_LOCAL = 'tienda-prueba';
+  const TIC = 5000;                   // cada cuánto se suma tiempo
+  const GUARDADO = 15000;             // cada cuánto se guarda
+
+  let estado = null;
   let temporizador = null;
   let ultimoVisto = 0;
   let desdeGuardado = 0;
-  let alCambiar = null;      // avisa a la app para repintar el contador
+  let alCambiar = null;
 
-  /* ---------- guardado ---------- */
+  /* ===================== guardado ===================== */
 
   function vacio() {
-    return { activo: false, minutos: 30, usadosMs: 0, iniciado: null, sal: '', pin: '', bloqueado: false };
+    return {
+      liberado: false,       // este celular ya tiene la versión completa
+      usadosMs: 0,
+      bloqueado: false,
+      revisadoInicial: false,
+      bienvenida: false,
+      desde: null
+    };
   }
 
   function leerLocal() {
@@ -34,48 +51,58 @@ const Demo = (() => {
   }
 
   function escribirLocal() {
-    try {
-      localStorage.setItem(CLAVE_LOCAL, JSON.stringify({
-        usadosMs: estado.usadosMs, iniciado: estado.iniciado, bloqueado: estado.bloqueado
-      }));
-    } catch (e) {}
+    try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(estado)); } catch (e) {}
   }
 
   async function guardar() {
-    await DB.setConfig('demo', estado);
+    await DB.setConfig('prueba', estado);
     escribirLocal();
     desdeGuardado = 0;
   }
 
-  /* ---------- PIN ---------- */
+  /* ===================== la llave del dueño ===================== */
 
-  async function huella(pin, sal) {
-    const texto = sal + '|' + String(pin).trim();
-    if (window.crypto && crypto.subtle && window.isSecureContext) {
-      const datos = new TextEncoder().encode(texto);
-      const buf = await crypto.subtle.digest('SHA-256', datos);
-      return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('');
-    }
-    // Respaldo sencillo por si el navegador no trae criptografía disponible.
-    let h = 5381;
-    for (let i = 0; i < texto.length; i++) h = ((h * 33) ^ texto.charCodeAt(i)) >>> 0;
-    return 'simple-' + h.toString(16);
+  function aHex(buffer) {
+    return Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
   }
 
-  function nuevaSal() {
-    const a = new Uint8Array(8);
-    (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach((_, i) => { a[i] = Math.random() * 256; });
-    return Array.from(a).map((b) => b.toString(16).padStart(2, '0')).join('');
+  async function huellaDe(llave) {
+    if (!(window.crypto && crypto.subtle && window.isSecureContext)) return null;
+    const enc = new TextEncoder();
+    const base = await crypto.subtle.importKey('raw', enc.encode(String(llave).trim()), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits(
+      { name: 'PBKDF2', salt: enc.encode(SAL), iterations: ITERACIONES, hash: 'SHA-256' }, base, 256);
+    return aHex(bits);
   }
 
-  async function pinCorrecto(pin) {
-    if (!estado || !estado.pin) return false;
-    return (await huella(pin, estado.sal)) === estado.pin;
+  async function llaveCorrecta(llave) {
+    if (!llave) return false;
+    const h = await huellaDe(llave);
+    return h !== null && h === HUELLA;
   }
 
-  /* ---------- tiempo ---------- */
+  /** Libera este celular: versión completa para siempre. */
+  async function liberar() {
+    estado.liberado = true;
+    estado.bloqueado = false;
+    await guardar();
+    detenerReloj();
+    const caja = document.getElementById('bloqueoDemo');
+    if (caja) caja.remove();
+    if (alCambiar) alCambiar(estado);
+  }
 
-  function limiteMs() { return Math.max(1, Number(estado.minutos) || 30) * 60000; }
+  /** Vuelve a poner este celular en modo prueba (para probar el flujo). */
+  async function volverAPrueba() {
+    estado = Object.assign(vacio(), { revisadoInicial: true, bienvenida: true, desde: new Date().toISOString() });
+    await guardar();
+    arrancarReloj();
+    if (alCambiar) alCambiar(estado);
+  }
+
+  /* ===================== tiempo ===================== */
+
+  function limiteMs() { return MINUTOS * 60000; }
   function restanteMs() { return Math.max(0, limiteMs() - Number(estado.usadosMs || 0)); }
 
   function textoRestante() {
@@ -86,23 +113,20 @@ const Demo = (() => {
   }
 
   function correrTiempo() {
-    if (!estado.activo || estado.bloqueado) return;
+    if (!estado || estado.liberado || estado.bloqueado) return;
     const ahora = Date.now();
     const visible = document.visibilityState !== 'hidden';
     const delta = ahora - ultimoVisto;
     ultimoVisto = ahora;
 
-    // Solo cuenta si la app está a la vista; si movieron el reloj hacia
-    // atrás (delta negativo) no se regala tiempo, se cobra el tic completo.
+    // Solo corre con la app a la vista. Si mueven el reloj hacia atrás
+    // (delta negativo) no se regala tiempo: se cobra el tic completo.
     if (visible) {
       estado.usadosMs += (delta > 0 && delta < TIC * 3) ? delta : TIC;
       desdeGuardado += TIC;
     }
 
-    if (estado.usadosMs >= limiteMs()) {
-      bloquear();
-      return;
-    }
+    if (estado.usadosMs >= limiteMs()) { bloquear(); return; }
     if (desdeGuardado >= GUARDADO) guardar();
     if (alCambiar) alCambiar(estado);
   }
@@ -117,7 +141,7 @@ const Demo = (() => {
     if (temporizador) { clearInterval(temporizador); temporizador = null; }
   }
 
-  /* ---------- pantalla de bloqueo ---------- */
+  /* ===================== pantallas ===================== */
 
   function bloquear() {
     estado.bloqueado = true;
@@ -127,14 +151,8 @@ const Demo = (() => {
     if (alCambiar) alCambiar(estado);
   }
 
-  function minutosTexto() {
-    const m = Number(estado.minutos) || 30;
-    return m === 1 ? 'un minuto' : m + ' minutos';
-  }
-
   function pintarBloqueo() {
     if (document.getElementById('bloqueoDemo')) return;
-    const tienda = (App.estado.cfg && App.estado.cfg.tienda) || 'Mi Tienda';
     const caja = document.createElement('div');
     caja.id = 'bloqueoDemo';
     caja.className = 'bloqueo';
@@ -142,106 +160,124 @@ const Demo = (() => {
       '<div class="bloqueo-caja">' +
         '<div class="bloqueo-icono">⏳</div>' +
         '<h2>Se terminó la prueba</h2>' +
-        '<p>Probaste <b>' + App.esc(tienda) + '</b> durante ' + minutosTexto() +
-          '. Todo lo que registraste sigue guardado.</p>' +
-        '<p class="nota">Para seguir usándola, pide la versión completa al dueño de la app.</p>' +
-        '<div class="campo"><label>¿Eres el dueño? Escribe tu PIN para desbloquear</label>' +
-        '<input type="password" id="pinDemo" inputmode="numeric" placeholder="PIN"></div>' +
-        '<button class="btn-principal" id="btnDesbloquear">Desbloquear</button>' +
+        '<p>Probaste la app durante <b>' + MINUTOS + ' minutos</b>. Todo lo que registraste sigue guardado.</p>' +
+        '<p class="nota">Para seguir usándola sin límite, pide la versión completa a quien te compartió la app.</p>' +
+        '<div class="campo"><label>¿Tienes la llave? Escríbela para activar este celular</label>' +
+        '<input type="password" id="pinDemo" placeholder="llave de activación" autocomplete="off"></div>' +
+        '<button class="btn-principal" id="btnDesbloquear">Activar versión completa</button>' +
         '<p class="nota" id="errorPin"></p>' +
       '</div>';
     document.body.appendChild(caja);
 
     const intentar = async () => {
-      const pin = document.getElementById('pinDemo').value;
-      if (await pinCorrecto(pin)) {
-        await terminar();
-        caja.remove();
-        App.aviso('Prueba terminada: la app quedó desbloqueada', 'exito');
+      const boton = document.getElementById('btnDesbloquear');
+      const error = document.getElementById('errorPin');
+      boton.disabled = true;
+      error.textContent = 'Comprobando…';
+      if (await llaveCorrecta(document.getElementById('pinDemo').value)) {
+        await liberar();
+        App.aviso('¡Listo! Este celular ya tiene la versión completa', 'exito');
       } else {
-        document.getElementById('errorPin').textContent = 'Ese PIN no es correcto.';
+        error.textContent = 'Esa llave no es correcta.';
         document.getElementById('pinDemo').value = '';
+        boton.disabled = false;
       }
     };
     document.getElementById('btnDesbloquear').onclick = intentar;
     document.getElementById('pinDemo').onkeydown = (e) => { if (e.key === 'Enter') intentar(); };
   }
 
-  /* ---------- API ---------- */
-
-  /** Enciende la prueba: minutos y PIN los pone el dueño. */
-  async function iniciar(minutos, pin) {
-    const m = Math.max(1, Math.round(Number(minutos) || 30));
-    if (!pin || String(pin).trim().length < 4) throw new Error('El PIN debe tener al menos 4 caracteres');
-    const sal = nuevaSal();
-    estado = {
-      activo: true, minutos: m, usadosMs: 0,
-      iniciado: new Date().toISOString(),
-      sal: sal, pin: await huella(pin, sal), bloqueado: false
-    };
-    await guardar();
-    arrancarReloj();
-    if (alCambiar) alCambiar(estado);
-    return estado;
+  function pintarBienvenida() {
+    App.abrirModal(
+      '<h2>👋 Estás probando la app</h2>' +
+      '<p class="sub">Tienes <b>' + MINUTOS + ' minutos</b> para conocerla. El tiempo solo corre mientras la usas.</p>' +
+      '<div class="panel"><ul class="lista-simple">' +
+        '<li><span>Escanea productos con la cámara</span><b>📷</b></li>' +
+        '<li><span>Cobra y lleva las cuentas del día</span><b>💵</b></li>' +
+        '<li><span>Apunta fiados y visitas de proveedor</span><b>🤝</b></li>' +
+        '<li><span>Saca tu lista de compras en PDF</span><b>📄</b></li>' +
+      '</ul></div>' +
+      '<p class="ayuda">Arriba, junto a la campana, verás cuánto tiempo te queda.</p>' +
+      '<button class="btn-principal" id="mOk">Empezar a probar</button>'
+    );
+    const boton = document.getElementById('mOk');
+    if (boton) boton.onclick = App.cerrarModal;
+    estado.bienvenida = true;
+    guardar();
   }
 
-  /** Apaga la prueba (ya con el PIN comprobado). */
-  async function terminar() {
-    estado = vacio();
-    await guardar();
-    try { localStorage.removeItem(CLAVE_LOCAL); } catch (e) {}
-    detenerReloj();
-    const caja = document.getElementById('bloqueoDemo');
-    if (caja) caja.remove();
-    if (alCambiar) alCambiar(estado);
-  }
+  /* ===================== arranque ===================== */
 
-  /** Suma tiempo a una prueba en curso (por si el cliente pide más rato). */
-  async function agregarMinutos(minutos) {
-    if (!estado.activo) return;
-    estado.minutos = Math.max(1, Number(estado.minutos) + Math.round(Number(minutos) || 0));
-    estado.bloqueado = false;
-    await guardar();
-    const caja = document.getElementById('bloqueoDemo');
-    if (caja) caja.remove();
-    arrancarReloj();
-    if (alCambiar) alCambiar(estado);
+  /** Llave en el enlace: ...?llave=xxxx (para el celular del dueño). */
+  async function revisarLlaveEnElEnlace() {
+    let llave = null;
+    try {
+      const url = new URL(location.href);
+      llave = url.searchParams.get('llave');
+      if (llave) {
+        url.searchParams.delete('llave');
+        history.replaceState({}, '', url.pathname + (url.search || '') + url.hash);
+      }
+    } catch (e) {}
+    if (llave && await llaveCorrecta(llave)) {
+      await liberar();
+      return true;
+    }
+    return false;
   }
 
   async function cargar(callback) {
     alCambiar = callback || null;
     const cfg = await DB.getConfig();
-    estado = Object.assign(vacio(), cfg.demo || {});
+    estado = Object.assign(vacio(), cfg.prueba || {});
 
-    // Si alguien borró una de las dos copias, manda la que tiene más uso.
+    // Si borraron una de las dos copias, manda la que tiene más uso.
     const local = leerLocal();
-    if (local && estado.activo) {
+    if (local && !estado.liberado) {
       estado.usadosMs = Math.max(Number(estado.usadosMs || 0), Number(local.usadosMs || 0));
       if (local.bloqueado) estado.bloqueado = true;
+      if (local.liberado) estado.liberado = true;
     }
 
-    if (estado.activo) {
-      if (estado.bloqueado || estado.usadosMs >= limiteMs()) {
-        estado.bloqueado = true;
-        await guardar();
-        pintarBloqueo();
-      } else {
-        arrancarReloj();
-      }
+    // Primera vez con esta versión: si el celular ya tenía productos, es de
+    // la tienda (no de un cliente nuevo) y se queda con la versión completa.
+    if (!estado.revisadoInicial) {
+      const productos = await DB.todosProductos();
+      estado.revisadoInicial = true;
+      estado.desde = new Date().toISOString();
+      if (productos.length > 0) estado.liberado = true;
+      await guardar();
+    }
+
+    await revisarLlaveEnElEnlace();
+
+    if (estado.liberado) {
+      if (alCambiar) alCambiar(estado);
+      return estado;
+    }
+
+    if (estado.bloqueado || estado.usadosMs >= limiteMs()) {
+      estado.bloqueado = true;
+      await guardar();
+      pintarBloqueo();
+    } else {
+      if (!estado.bienvenida) setTimeout(pintarBienvenida, 600);
+      arrancarReloj();
     }
 
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') { guardar(); }
-      else { ultimoVisto = Date.now(); }
+      if (document.visibilityState === 'hidden') guardar();
+      else ultimoVisto = Date.now();
     });
-    window.addEventListener('pagehide', () => { if (estado.activo) guardar(); });
+    window.addEventListener('pagehide', () => { if (!estado.liberado) guardar(); });
 
+    if (alCambiar) alCambiar(estado);
     return estado;
   }
 
   return {
-    cargar, iniciar, terminar, agregarMinutos, pinCorrecto, bloquear,
-    restanteMs, textoRestante, limiteMs,
+    cargar, liberar, volverAPrueba, llaveCorrecta, bloquear,
+    restanteMs, textoRestante, limiteMs, minutos: () => MINUTOS,
     estado: () => estado
   };
 })();

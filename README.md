@@ -161,24 +161,39 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
-## 🔑 Prestársela a un cliente (modo demostración)
+## 🔑 Versión de prueba de 30 minutos
 
-En **Ajustes → Modo demostración** pones cuántos minutos quieres y un **PIN**;
-tocas *Iniciar prueba* y ya puedes prestar el celular.
+Cualquiera que abra el enlace público puede usar la app **30 minutos de uso**.
+Al abrirla ve un aviso de bienvenida, arriba le corre el contador (⏳ 23 min) y
+al terminarse aparece una pantalla que la bloquea e invita a pedir la versión
+completa. Lo que registró durante la prueba **no se borra**.
 
-- Arriba se ve el tiempo que le queda (⏳ 23 min).
-- El reloj corre **solo con la app abierta**: si la cierran, se pausa.
-- Al acabarse, la app se bloquea con una pantalla que pide el PIN.
-- Lo que el cliente registró **no se borra**.
-- Con *+10 minutos* alargas la prueba sin apagarla.
+- El reloj corre **solo con la app abierta**: si la cierra, se pausa.
+- El conteo se guarda en dos lugares, así que borrar uno no regala otra prueba.
+- Mover la hora del celular hacia atrás no da tiempo extra.
 
-El PIN lo eliges tú y la app guarda **solo su huella** (SHA-256 con sal), así
-que ni leyendo el código de este repositorio se puede sacar. **Anótalo**: sin
-él, la única forma de desbloquear sería borrar los datos de la app.
+### Activar un celular (versión completa)
 
-Es un candado de cortesía para una demostración: alguien técnico podría
-saltárselo borrando los datos del navegador. Para una prueba con un cliente
-cumple de sobra.
+El dueño tiene una **llave de activación**. Se usa de dos formas:
+
+1. Escribiéndola en la pantalla de bloqueo, o en
+   **Ajustes → Versión de prueba**.
+2. Abriendo el enlace con la llave al final: `…/App-escanerr/?llave=LA-LLAVE`
+   (la app la activa y borra la llave de la dirección).
+
+Ese celular queda con la versión completa para siempre, sin contador.
+
+**La llave no está en este repositorio**: aquí solo vive su huella, calculada
+con PBKDF2-SHA256 y 150 000 vueltas. Aunque el código es público, de la huella
+no se puede sacar la llave.
+
+Los celulares que **ya tenían productos registrados** antes de esta versión no
+entran en modo prueba: se activan solos, para que la tienda no se quede
+bloqueada a media venta.
+
+Alcance honesto: es un candado de cortesía. Alguien técnico podría borrar los
+datos del navegador y empezar otra prueba. Para enseñarle la app a un cliente
+cumple de sobra; un control real necesitaría un servidor de licencias.
 
 ## 🔢 Saber qué versión tienes
 

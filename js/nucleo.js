@@ -4,7 +4,7 @@
  */
 const App = (() => {
   /* Se sube en cada publicación: sirve para saber qué trae el celular. */
-  const VERSION = '2.3';
+  const VERSION = '2.4';
   const FECHA_VERSION = '16 sep 2026';
 
   const $ = (sel) => document.querySelector(sel);
