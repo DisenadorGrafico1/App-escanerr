@@ -11,7 +11,8 @@
     "prueba-app": "node pruebas/prueba-app.mjs",
     "prueba-actualizacion": "node pruebas/prueba-actualizacion.mjs",
     "prueba-precision": "node pruebas/prueba-precision.mjs",
-    "prueba-lejos": "python3 pruebas/generar-codigo-barras.py && python3 pruebas/generar-codigo-barras.py lejos && node pruebas/prueba-lejos.mjs"
+    "prueba-lejos": "python3 pruebas/generar-codigo-barras.py && python3 pruebas/generar-codigo-barras.py lejos && node pruebas/prueba-lejos.mjs",
+    "prueba-demo": "node pruebas/prueba-demo.mjs"
   },
   "devDependencies": {
     "fake-indexeddb": "^6.0.0",

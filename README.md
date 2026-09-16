@@ -161,6 +161,25 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
+## 🔑 Prestársela a un cliente (modo demostración)
+
+En **Ajustes → Modo demostración** pones cuántos minutos quieres y un **PIN**;
+tocas *Iniciar prueba* y ya puedes prestar el celular.
+
+- Arriba se ve el tiempo que le queda (⏳ 23 min).
+- El reloj corre **solo con la app abierta**: si la cierran, se pausa.
+- Al acabarse, la app se bloquea con una pantalla que pide el PIN.
+- Lo que el cliente registró **no se borra**.
+- Con *+10 minutos* alargas la prueba sin apagarla.
+
+El PIN lo eliges tú y la app guarda **solo su huella** (SHA-256 con sal), así
+que ni leyendo el código de este repositorio se puede sacar. **Anótalo**: sin
+él, la única forma de desbloquear sería borrar los datos de la app.
+
+Es un candado de cortesía para una demostración: alguien técnico podría
+saltárselo borrando los datos del navegador. Para una prueba con un cliente
+cumple de sobra.
+
 ## 🔢 Saber qué versión tienes
 
 En **Menú → Ajustes → Versión de la app** aparece la versión instalada y cómo

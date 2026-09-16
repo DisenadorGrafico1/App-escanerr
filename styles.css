@@ -416,6 +416,27 @@ input:focus, select:focus { outline: 2px solid var(--morado); outline-offset: 1p
 .barra-inferior .tab.activa { color: var(--morado); }
 .punto { position: absolute; top: 6px; right: 22%; width: 9px; height: 9px; border-radius: 50%; background: var(--rojo); }
 
+/* ---------- modo demostración ---------- */
+.chip-demo {
+  background: rgba(255, 255, 255, .22); color: #fff; border-radius: 999px;
+  padding: 5px 11px; font-size: 12px; font-weight: 800; white-space: nowrap;
+}
+.chip-demo.poco { background: var(--ambar); }
+.bloqueo {
+  position: fixed; inset: 0; z-index: 200; background: rgba(18, 10, 32, .96);
+  display: flex; align-items: center; justify-content: center; padding: 22px;
+  -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+}
+.bloqueo-caja {
+  background: var(--tarjeta); border-radius: 20px; padding: 26px 20px;
+  max-width: 380px; width: 100%; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, .5);
+}
+.bloqueo-icono { font-size: 46px; margin-bottom: 6px; }
+.bloqueo-caja h2 { margin: 0 0 10px; font-size: 21px; }
+.bloqueo-caja p { font-size: 14.5px; color: var(--texto); margin: 0 0 12px; }
+.bloqueo-caja .nota { font-size: 13px; color: var(--texto-suave); }
+.bloqueo-caja .campo { text-align: left; margin-top: 16px; }
+
 /* ---------- avisos y modal ---------- */
 .aviso {
   position: fixed; left: 12px; right: 12px; bottom: calc(var(--alto-nav) + 14px + env(safe-area-inset-bottom));
