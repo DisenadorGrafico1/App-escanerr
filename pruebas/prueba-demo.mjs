@@ -148,7 +148,7 @@ const cliente = await nuevoCelular();
   if (!/ya se usó/.test(await page.textContent('#errorPin'))) throw new Error('no avisó que la prueba ya se usó');
   paso('la clave de prueba ya no sirve en ese celular ("ya se usó")');
 
-  await page.evaluate(() => localStorage.removeItem('tienda-acceso'));
+  await page.evaluate(() => localStorage.removeItem('tienda-acceso-prueba'));
   await page.reload();
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
   await escribirClave(page, PRUEBA);
@@ -218,7 +218,54 @@ const cliente = await nuevoCelular();
   await ctx.close();
 }
 
-/* ============ 4. Aquí siempre se pide clave, tenga lo que tenga ============ */
+/* ============ 4. Las dos apps en el MISMO dominio ============ */
+/* En GitHub Pages viven en …/App-escanerr/ y …/app-de-prueba/: mismo dominio,
+   y el navegador guarda los datos por dominio. La de prueba debe tener su
+   propia base, o leería el inventario de la tienda y no pediría clave. */
+{
+  const APP = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const dos = createServer(async (req, res) => {
+    let ruta = decodeURIComponent(req.url.split('?')[0]);
+    let base = APP;
+    if (ruta.startsWith('/prueba')) { base = RAIZ; ruta = ruta.slice('/prueba'.length) || '/'; }
+    else if (ruta.startsWith('/tienda')) { base = APP; ruta = ruta.slice('/tienda'.length) || '/'; }
+    if (ruta === '/' || ruta === '') ruta = '/index.html';
+    try {
+      const datos = await readFile(join(base, normalize(ruta)));
+      res.writeHead(200, { 'content-type': TIPOS[extname(ruta)] || 'application/octet-stream' });
+      res.end(datos);
+    } catch { res.writeHead(404); res.end('404'); }
+  });
+  await new Promise((r) => dos.listen(8081, r));
+
+  const { ctx, page } = await nuevoCelular();
+  await page.goto('http://localhost:8081/tienda/');
+  await page.waitForSelector('#vista-inicio.activa');
+  await page.waitForTimeout(800);
+  await page.evaluate(async () => {
+    await DB.guardarProducto({ codigo: '7501055300013', nombre: 'Coca Cola 600 ml', categoria: 'Bebidas',
+      costo: 12, precio: 18, stock: 0, minimo: 6 });
+    await DB.agregarExistencia('7501055300013', 24, 12);
+    // Marca que dejaron en el celular del dueño las versiones con clave
+    await DB.setConfig('acceso', { liberado: true, revisadoInicial: true, pruebaActivada: false, usadosMs: 0 });
+  });
+
+  await page.goto('http://localhost:8081/prueba/');
+  await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
+  paso('en el mismo dominio que la tienda, la prueba SÍ pide clave');
+  igual(await page.evaluate(() => DB.todosProductos().then((p) => p.length)), 0,
+    'la prueba no ve el inventario de la tienda');
+  paso('y no ve el inventario de la tienda: usa su propia base de datos');
+
+  await escribirClave(page, PRUEBA);
+  if (await page.$('#bloqueoDemo')) throw new Error('no entró con la clave');
+  igual(await page.evaluate(() => DB.todosProductos().then((p) => p.length)), 0, 'empieza vacía');
+  paso('entra con su clave y arranca vacía, como en el celular de un cliente');
+  await ctx.close();
+  dos.close();
+}
+
+/* ============ 5. Aquí siempre se pide clave, tenga lo que tenga ============ */
 {
   const { ctx, page } = await nuevoCelular();
   await page.goto(URL_APP + '?clave=' + encodeURIComponent(PRUEBA));
@@ -227,7 +274,7 @@ const cliente = await nuevoCelular();
     await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
       costo: 10, precio: 16, stock: 0, minimo: 4, creado: '2026-09-01T10:00:00.000Z' });
     await DB.setConfig('acceso', null);
-    localStorage.removeItem('tienda-acceso');
+    localStorage.removeItem('tienda-acceso-prueba');
   });
   await page.reload();
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });

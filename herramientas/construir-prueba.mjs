@@ -73,6 +73,19 @@ if (html.includes('rel="manifest"') || html.includes('js/sw.js')) {
 await writeFile(join(DESTINO, 'index.html'), html);
 
 /* ---------- ajustes dentro de la copia ---------- */
+// 0. Base de datos aparte. Las dos apps pueden vivir en el mismo dominio
+//    (…/App-escanerr/ y …/app-de-prueba/) y el navegador guarda los datos por
+//    DOMINIO, no por carpeta: sin esto, la prueba leería el inventario de la
+//    tienda y su marca de "celular activado", y no pediría clave.
+const rutaDB = join(DESTINO, 'js', 'db.js');
+let baseDatos = await readFile(rutaDB, 'utf8');
+if (!baseDatos.includes("const NOMBRE = 'tienda-abarrotes';")) {
+  throw new Error('No se encontró el nombre de la base de datos en db.js');
+}
+baseDatos = baseDatos.replace("const NOMBRE = 'tienda-abarrotes';",
+  "const NOMBRE = 'tienda-abarrotes-prueba';   // versión de prueba: datos aparte");
+await writeFile(rutaDB, baseDatos);
+
 // 1. Sin service worker: la versión de prueba nunca se guarda en el celular.
 const rutaApp = join(DESTINO, 'js', 'app.js');
 let app = await readFile(rutaApp, 'utf8');
@@ -81,8 +94,11 @@ app = app.replace("    if ('serviceWorker' in navigator) prepararActualizaciones
 await writeFile(rutaApp, app);
 
 // 2. El atajo de "ya tenía productos" no aplica aquí: siempre se pide clave.
+//    Y el rastro en el navegador también va aparte, por lo mismo del dominio.
 const rutaDemo = join(DESTINO, 'js', 'demo.js');
 let demo = await readFile(rutaDemo, 'utf8');
+demo = demo.replace("const CLAVE_LOCAL = 'tienda-acceso';",
+  "const CLAVE_LOCAL = 'tienda-acceso-prueba';");
 demo = demo.replace('if (productos.some((p) => p.creado && p.creado < ANTES_DE)) estado.liberado = true;',
   '// En la versión de prueba siempre se pide clave, tenga lo que tenga el celular.');
 await writeFile(rutaDemo, demo);
