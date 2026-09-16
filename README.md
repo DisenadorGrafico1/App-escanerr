@@ -21,6 +21,10 @@ compilación.
   escoger la rama `claude/grocery-inventory-app-is6fos`, dejar el framework
   en *Other* y sin comando de compilación.
 
+La app de prueba queda en la subcarpeta `app-de-prueba/`, así que con un solo
+despliegue salen los dos enlaces: `…/` para la tienda y `…/app-de-prueba/`
+para los clientes.
+
 Ojo: si se apaga la publicación, los celulares que **ya la tienen instalada**
 siguen funcionando (la app vive dentro del teléfono), pero dejan de recibir
 actualizaciones y nadie nuevo puede instalarla.
@@ -177,40 +181,43 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
-## 🔑 Acceso con clave y prueba de 30 minutos
+## 🧪 Las dos versiones
 
-La app **pide una clave al abrir**. Hay dos:
+Este repositorio produce **dos apps** a partir del mismo código:
 
-| Clave | Qué hace |
-|---|---|
-| **De prueba** (la que le das al cliente) | Abre la app por **30 minutos de uso**. Al terminarse vuelve a pedir clave y avisa que esa prueba ya se usó en ese celular. |
-| **Del dueño** | Activa ese celular con la **versión completa**: ya no vuelve a pedir clave ni tiene contador. |
+| | App de la tienda (raíz) | App de prueba (`app-de-prueba/`) |
+|---|---|---|
+| Para quién | Para ti | Para enseñarla a un cliente |
+| Clave | No pide nada | **Pide clave al abrir** |
+| Duración | Sin límite | **30 minutos de uso** |
+| Sin internet | ✅ Funciona | ❌ Se tapa y avisa |
+| Se instala en el celular | ✅ Sí | ❌ No (solo abre por el enlace) |
 
-- El reloj corre **solo con la app abierta**: si la cierra, se pausa.
-- Si cierra y vuelve a abrir dentro de su prueba, **no le pide la clave otra vez**.
-- El avance se guarda en dos lugares, así que borrar uno no regala otra prueba.
-- Mover la hora del celular hacia atrás no da tiempo extra.
-- Lo que el cliente registre **no se borra**.
+La de prueba se genera con:
 
-También se pueden mandar en el enlace, para no dictarlas:
-`…/App-escanerr/?clave=LA-CLAVE` (la app la usa y la borra de la dirección).
+```bash
+npm run construir-prueba     # deja todo listo en app-de-prueba/
+```
 
-**Las claves no están en este repositorio**: aquí solo viven sus huellas,
-calculadas con PBKDF2-SHA256 y 150 000 vueltas. Aunque el código es público,
-de la huella no se puede sacar la clave.
+Se regenera desde la app real, así que **nunca se desincronizan**: cualquier
+mejora que se haga en la tienda aparece en la prueba al reconstruirla.
 
-Los celulares que **ya venían usando la app** antes de que existiera la clave
-entran directo, para que ninguna tienda se quede fuera. Se reconocen porque
-tienen productos registrados antes de esa fecha; lo que un cliente registre
-durante su prueba **no** cuenta para eso.
+### Cómo funciona la prueba
 
-Para ver la app como la ve un cliente sin usar otro celular: **Ajustes →
-Versión completa → "Ver cómo la vive un cliente"**, o abre el enlace en una
-**pestaña de incógnito**.
+- Al abrir el enlace pide **clave**. Sin clave no se ve nada.
+- Con la **clave de prueba** entran 30 minutos de uso: el reloj corre solo
+  mientras la app está abierta, y se pausa si se va el internet.
+- Al acabarse, vuelve la puerta y esa clave ya no sirve en ese celular.
+- Con la **llave del dueño** ese celular queda sin límite (también sirve en el
+  enlace: `?llave=…` o `?clave=…`, que se borra de la dirección).
+- El avance se guarda por duplicado, así que borrar el rastro del navegador no
+  regala otra prueba; mover la hora hacia atrás tampoco da tiempo extra.
 
-Alcance honesto: es un candado de cortesía. Alguien técnico podría borrar los
-datos del navegador y pedir otra prueba. Para enseñarle la app a un cliente
-cumple de sobra; un control real necesitaría un servidor de licencias.
+**Las claves no están en el repositorio**: solo sus huellas, con PBKDF2-SHA256
+y 150 000 vueltas. Aunque el código sea público, de la huella no sale la clave.
+
+Alcance honesto: es un candado de cortesía, no una licencia de servidor.
+Alguien técnico podría borrar los datos del navegador y pedir otra prueba.
 
 ## 🔢 Saber qué versión tienes
 
@@ -302,6 +309,7 @@ npm run prueba-camara  # prueba el escáner con una cámara simulada
 npm run prueba-actualizacion  # comprueba que actualizar no borra lo registrado
 npm run prueba-precision      # mide aciertos del escáner de cerca y de lejos
 npm run prueba-lejos          # cámara simulada: de lejos avisa y no registra
+npm run construir-prueba      # genera la app de prueba en app-de-prueba/
 npm run servir         # servidor local en http://localhost:8080
 ```
 

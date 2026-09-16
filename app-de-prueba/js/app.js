@@ -375,7 +375,7 @@
       if (document.hidden && Escaner.estaActivo()) Escaner.detener().then(App.pintarBotonesCamara);
     });
 
-    if ('serviceWorker' in navigator) prepararActualizaciones();
+    // Versión de prueba: no se guarda en el celular, siempre viene del servidor.
 
     if (!window.isSecureContext) aviso('Abre la app con https:// para poder usar la cámara', 'error');
   }

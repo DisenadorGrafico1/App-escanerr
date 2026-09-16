@@ -12,7 +12,7 @@
  * Los datos de la tienda NO viven aquí: están en IndexedDB y no se tocan
  * nunca al actualizar.
  */
-const CACHE = 'tienda-abarrotes-v2.3';
+const CACHE = 'tienda-abarrotes-v2.7';
 const ESPERA_RED = 3000;
 
 const ARCHIVOS = [
@@ -21,7 +21,6 @@ const ARCHIVOS = [
   './styles.css',
   './manifest.webmanifest',
   './js/db.js',
-  './js/demo.js',
   './js/scanner.js',
   './js/reportes.js',
   './js/nucleo.js',

@@ -1,6 +1,6 @@
 /*
- * Prueba de la puerta de acceso: la app pide clave y la clave de prueba
- * abre 30 minutos de uso.
+ * Prueba de la VERSIÓN DE PRUEBA (app-de-prueba/): pide clave, da 30 minutos
+ * de uso, no se instala en el celular y sin internet no funciona.
  *
  * Necesita las claves, que NO viven en el repositorio:
  *   LLAVE_DUENO=... CLAVE_PRUEBA=... npm run prueba-demo
@@ -13,7 +13,8 @@ import { readFile, readdir, access } from 'node:fs/promises';
 import { extname, join, normalize, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
+const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..', 'app-de-prueba');
+const PROYECTO = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PUERTO = 8082;
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
   '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
@@ -22,7 +23,7 @@ let LLAVE = process.env.LLAVE_DUENO || '';
 let PRUEBA = process.env.CLAVE_PRUEBA || '';
 if (!LLAVE || !PRUEBA) {
   try {
-    const lineas = (await readFile(join(RAIZ, '.llave'), 'utf8')).split('\n').map((l) => l.trim());
+    const lineas = (await readFile(join(PROYECTO, '.llave'), 'utf8')).split('\n').map((l) => l.trim());
     LLAVE = LLAVE || lineas[0];
     PRUEBA = PRUEBA || lineas[3];
   } catch {}
@@ -85,6 +86,13 @@ const cliente = await nuevoCelular();
   if (!/Escribe tu clave/.test(puerta)) throw new Error('no pidió clave: ' + puerta.slice(0, 80));
   paso('al abrir el enlace pide la clave antes de dejar usar nada');
   await page.screenshot({ path: '/tmp/puerta.png' });
+
+  igual(await page.evaluate(() => !!document.querySelector('link[rel="manifest"]')), false,
+    'la versión de prueba no se puede instalar (sin manifiesto)');
+  await page.waitForTimeout(1200);
+  igual(await page.evaluate(() => navigator.serviceWorker.getRegistrations().then((r) => r.length)), 0,
+    'no deja copia guardada en el celular');
+  paso('no se puede instalar ni deja copia guardada en el celular');
 
   await escribirClave(page, 'lo-que-sea');
   if (!(await page.$('#bloqueoDemo'))) throw new Error('entró con una clave inventada');
@@ -161,7 +169,35 @@ const cliente = await nuevoCelular();
   await cliente.ctx.close();
 }
 
-/* ============ 2. Claves en el enlace ============ */
+/* ============ 2. Sin internet no funciona ============ */
+{
+  const { ctx, page } = await nuevoCelular();
+  await page.goto(URL_APP + '?clave=' + encodeURIComponent(PRUEBA));
+  await page.waitForTimeout(2500);
+  if (await page.$('#bloqueoDemo')) throw new Error('no entró con la clave en el enlace');
+
+  const usadosAntes = await page.evaluate(() => Demo.estado().usadosMs);
+  await ctx.setOffline(true);
+  await page.waitForSelector('#sinLinea', { timeout: 30000 });
+  const aviso = await page.textContent('#sinLinea');
+  if (!/Necesitas internet/.test(aviso)) throw new Error('aviso equivocado: ' + aviso.slice(0, 60));
+  paso('al quedarse sin internet, tapa la app y avisa');
+  await page.screenshot({ path: '/tmp/sin-linea.png' });
+
+  await page.waitForTimeout(11000);
+  const usadosDespues = await page.evaluate(() => Demo.estado().usadosMs);
+  if (usadosDespues - usadosAntes > 3000) {
+    throw new Error('el reloj siguió corriendo sin internet (' + usadosAntes + ' → ' + usadosDespues + ')');
+  }
+  paso('mientras no hay internet, el tiempo de la prueba se queda pausado');
+
+  await ctx.setOffline(false);
+  await page.waitForFunction(() => !document.querySelector('#sinLinea'), { timeout: 40000 });
+  paso('al volver el internet, la app sigue sola');
+  await ctx.close();
+}
+
+/* ============ 3. Claves en el enlace ============ */
 {
   const { ctx, page } = await nuevoCelular();
   await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
@@ -182,46 +218,20 @@ const cliente = await nuevoCelular();
   await ctx.close();
 }
 
-/* ============ 3. Un cliente que ya usó la prueba no se cuela ============ */
+/* ============ 4. Aquí siempre se pide clave, tenga lo que tenga ============ */
 {
   const { ctx, page } = await nuevoCelular();
   await page.goto(URL_APP + '?clave=' + encodeURIComponent(PRUEBA));
   await page.waitForTimeout(2000);
-  // Registra productos durante su prueba (con fecha de hoy) y borra el rastro
   await page.evaluate(async () => {
     await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
-      costo: 10, precio: 16, stock: 0, minimo: 4 });
-    await DB.agregarExistencia('7501030465102', 10, 10);
+      costo: 10, precio: 16, stock: 0, minimo: 4, creado: '2026-09-01T10:00:00.000Z' });
     await DB.setConfig('acceso', null);
     localStorage.removeItem('tienda-acceso');
   });
   await page.reload();
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
-  paso('un cliente que registró productos en su prueba no se cuela: le vuelve a pedir clave');
-  await ctx.close();
-}
-
-/* ============ 4. Celular que ya tenía la tienda cargada ============ */
-{
-  const { ctx, page } = await nuevoCelular();
-  await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
-  await page.waitForTimeout(2000);
-  await page.evaluate(async () => {
-    // Producto registrado ANTES de que existiera la clave (tienda de siempre)
-    await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
-      costo: 10, precio: 16, stock: 0, minimo: 4 });
-    const p = await DB.getProducto('7501030465102');
-    p.creado = '2026-09-10T10:00:00.000Z';
-    await DB.guardarProducto(p);
-    await DB.setConfig('acceso', null);
-    localStorage.removeItem('tienda-acceso');
-  });
-  await page.reload();
-  await page.waitForSelector('#vista-inicio.activa');
-  await page.waitForTimeout(1500);
-  igual(await page.evaluate(() => Demo.estado().liberado), true, 'un celular con productos viejos no pide clave');
-  if (await page.$('#bloqueoDemo')) throw new Error('le pidió clave a la tienda');
-  paso('el celular de la tienda (productos de antes) NO queda encerrado: entra directo');
+  paso('aunque el celular tenga productos, la versión de prueba siempre pide clave');
   await ctx.close();
 }
 
@@ -229,7 +239,7 @@ if (errores.length) {
   console.error('  ✗ errores en consola:\n    ' + errores.join('\n    '));
   process.exitCode = 1;
 } else {
-  console.log('\nLa app pide clave, la de prueba da 30 minutos y solo tu llave la abre sin límite.');
+  console.log('\nLa versión de prueba: pide clave, da 30 minutos, no se instala y sin internet no funciona.');
 }
 await navegador.close();
 servidor.close();

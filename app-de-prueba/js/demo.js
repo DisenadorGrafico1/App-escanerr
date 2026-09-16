@@ -36,6 +36,7 @@ const Demo = (() => {
   let ultimoVisto = 0;
   let desdeGuardado = 0;
   let alCambiar = null;
+  let pausadoPorRed = false;
 
   /* ===================== guardado ===================== */
 
@@ -107,6 +108,7 @@ const Demo = (() => {
 
   function correrTiempo() {
     if (!estado || estado.liberado || !estado.pruebaActivada) return;
+    if (pausadoPorRed) { ultimoVisto = Date.now(); return; }
     const ahora = Date.now();
     const visible = document.visibilityState !== 'hidden';
     const delta = ahora - ultimoVisto;
@@ -312,7 +314,7 @@ const Demo = (() => {
       const productos = await DB.todosProductos();
       estado.revisadoInicial = true;
       estado.desde = new Date().toISOString();
-      if (productos.some((p) => p.creado && p.creado < ANTES_DE)) estado.liberado = true;
+      // En la versión de prueba siempre se pide clave, tenga lo que tenga el celular.
       await guardar();
     }
 
@@ -337,8 +339,14 @@ const Demo = (() => {
     return estado;
   }
 
+  /** La versión en línea la usa para no cobrar tiempo mientras no hay red. */
+  function pausarPorRed(pausar) {
+    pausadoPorRed = !!pausar;
+    ultimoVisto = Date.now();
+  }
+
   return {
-    cargar, liberar, volverAPrueba, empezarPrueba, llaveCorrecta, tipoDeClave,
+    cargar, liberar, volverAPrueba, empezarPrueba, llaveCorrecta, tipoDeClave, pausarPorRed,
     restanteMs, textoRestante, limiteMs, pruebaAgotada, minutos: () => MINUTOS,
     estado: () => estado
   };
