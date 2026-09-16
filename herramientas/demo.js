@@ -59,10 +59,15 @@ const Demo = (() => {
     try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(estado)); } catch (e) {}
   }
 
+  /**
+   * Guarda el avance. Primero en el navegador, que es INMEDIATO: la base de
+   * datos tarda y, al recargar o cerrar la página, esa escritura se queda a
+   * medias y el tiempo se perdía.
+   */
   async function guardar() {
-    await DB.setConfig('acceso', estado);
     escribirLocal();
     desdeGuardado = 0;
+    try { await DB.setConfig('acceso', estado); } catch (e) {}
   }
 
   /* ===================== claves ===================== */
@@ -119,6 +124,9 @@ const Demo = (() => {
     if (visible) {
       estado.usadosMs += (delta > 0 && delta < TIC * 3) ? delta : TIC;
       desdeGuardado += TIC;
+      // En cada vuelta se anota en el navegador (es instantáneo), así que
+      // aunque recarguen o cierren de golpe, se pierden segundos, no minutos.
+      escribirLocal();
     }
 
     if (restanteMs() <= 0) { cerrarPorTiempo(); return; }
@@ -318,11 +326,14 @@ const Demo = (() => {
       await guardar();
     }
 
+    // Al esconder o cerrar la app se anota de inmediato en el navegador; la
+    // base de datos se actualiza después, si da tiempo.
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') guardar();
+      if (document.visibilityState === 'hidden') { escribirLocal(); guardar(); }
       else ultimoVisto = Date.now();
     });
-    window.addEventListener('pagehide', () => { if (!estado.liberado) guardar(); });
+    window.addEventListener('pagehide', () => { if (!estado.liberado) { escribirLocal(); guardar(); } });
+    window.addEventListener('beforeunload', () => { if (!estado.liberado) escribirLocal(); });
 
     if (await revisarClaveEnElEnlace()) return estado;
 

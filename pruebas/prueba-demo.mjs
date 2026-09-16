@@ -17,7 +17,8 @@ const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..', 'app-de-prueba'
 const PROYECTO = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PUERTO = 8082;
 const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css',
-  '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
+  '.json': 'application/json', '.png': 'image/png', '.txt': 'text/plain',
+  '.webmanifest': 'application/manifest+json' };
 
 let LLAVE = process.env.LLAVE_DUENO || '';
 let PRUEBA = process.env.CLAVE_PRUEBA || '';
@@ -36,6 +37,7 @@ if (!LLAVE || !PRUEBA) {
 const servidor = createServer(async (req, res) => {
   let ruta = decodeURIComponent(req.url.split('?')[0]);
   if (ruta === '/') ruta = '/index.html';
+  if (ruta === '/favicon.ico') ruta = '/icons/icon-192.png';   // evita un 404 de ruido
   try {
     const datos = await readFile(join(RAIZ, normalize(ruta)));
     res.writeHead(200, { 'content-type': TIPOS[extname(ruta)] || 'application/octet-stream' });
@@ -127,10 +129,28 @@ const cliente = await nuevoCelular();
   if (!((await page.evaluate(() => Demo.estado().usadosMs)) > antes)) throw new Error('el tiempo no corrió');
   paso('el tiempo corre mientras la usa');
 
+  const usadosAntesDeRecargar = await page.evaluate(() => Demo.estado().usadosMs);
   await page.reload();
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(2000);
   if (await page.$('#bloqueoDemo')) throw new Error('volvió a pedir clave dentro de la prueba');
   paso('si cierra y vuelve a abrir, sigue dentro de su prueba (no pide clave otra vez)');
+
+  // Recargar NO debe regalar tiempo: es la forma más obvia de estirar la prueba.
+  const usadosTrasRecargar = await page.evaluate(() => Demo.estado().usadosMs);
+  if (usadosTrasRecargar < usadosAntesDeRecargar - 1500) {
+    throw new Error('recargar reinició el tiempo (' + Math.round(usadosAntesDeRecargar / 1000) +
+      's → ' + Math.round(usadosTrasRecargar / 1000) + 's)');
+  }
+  paso('recargar no reinicia el tiempo: conservó ' + Math.round(usadosTrasRecargar / 1000) + ' s');
+
+  await page.waitForTimeout(8000);
+  await page.reload();
+  await page.waitForTimeout(2000);
+  const usadosFinal = await page.evaluate(() => Demo.estado().usadosMs);
+  if (usadosFinal < usadosTrasRecargar + 5000) {
+    throw new Error('el tiempo dejó de sumar tras recargar (' + Math.round(usadosFinal / 1000) + 's)');
+  }
+  paso('y sigue sumando después de recargar (' + Math.round(usadosFinal / 1000) + ' s)');
 
   await page.evaluate(async () => {
     const d = Demo.estado();
@@ -273,10 +293,23 @@ const cliente = await nuevoCelular();
   await page.evaluate(async () => {
     await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
       costo: 10, precio: 16, stock: 0, minimo: 4, creado: '2026-09-01T10:00:00.000Z' });
-    await DB.setConfig('acceso', null);
-    localStorage.removeItem('tienda-acceso-prueba');
   });
-  await page.reload();
+  // Se borra el rastro desde una página sin la app (si no, al recargar la
+  // propia app lo vuelve a escribir antes de cerrarse).
+  await page.goto(URL_APP.replace('index.html', 'latido.txt'));
+  await page.evaluate(() => new Promise((listo) => {
+    try { localStorage.removeItem('tienda-acceso-prueba'); } catch (e) {}
+    const req = indexedDB.open('tienda-abarrotes-prueba');
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('config', 'readwrite');
+      tx.objectStore('config').delete('acceso');
+      tx.oncomplete = () => listo();
+      tx.onerror = () => listo();
+    };
+    req.onerror = () => listo();
+  }));
+  await page.goto(URL_APP);
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
   paso('aunque el celular tenga productos, la versión de prueba siempre pide clave');
   await ctx.close();
