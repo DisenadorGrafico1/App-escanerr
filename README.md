@@ -9,6 +9,22 @@ agenda de proveedores y el corte de caja.
 
 ---
 
+## 🌐 Dónde está publicada
+
+Funciona en cualquier hosting de archivos estáticos: no necesita servidor ni
+compilación.
+
+- **GitHub Pages**: gratis solo si el repositorio es **público** (en privado
+  GitHub apaga la página).
+- **Vercel**: publica repositorios **privados** sin costo. El repositorio ya
+  trae `vercel.json` con las cabeceras correctas; al importarlo hay que
+  escoger la rama `claude/grocery-inventory-app-is6fos`, dejar el framework
+  en *Other* y sin comando de compilación.
+
+Ojo: si se apaga la publicación, los celulares que **ya la tienen instalada**
+siguen funcionando (la app vive dentro del teléfono), pero dejan de recibir
+actualizaciones y nadie nuevo puede instalarla.
+
 ## 📱 Cómo ponerla en tu celular
 
 ### Android (Chrome)
