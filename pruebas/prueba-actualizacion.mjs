@@ -90,6 +90,25 @@ igual(antes.stockCoca, 21, 'existencia tras la venta');
 igual(antes.vendidoHoy, 54, 'venta del día');
 paso('la tienda registró 2 productos, una venta de $54 y su nombre');
 
+/* Una tienda de verdad lleva días usando la app: se envejecen los productos
+   para que la versión nueva la reconozca y no le pida clave de acceso. */
+await page.evaluate(() => new Promise((listo, falla) => {
+  const req = indexedDB.open('tienda-abarrotes');
+  req.onsuccess = () => {
+    const db = req.result;
+    const tx = db.transaction('productos', 'readwrite');
+    const os = tx.objectStore('productos');
+    const todos = os.getAll();
+    todos.onsuccess = () => todos.result.forEach((p) => {
+      p.creado = '2026-09-01T10:00:00.000Z';
+      os.put(p);
+    });
+    tx.oncomplete = () => listo();
+    tx.onerror = () => falla(tx.error);
+  };
+  req.onerror = () => falla(req.error);
+}));
+
 /* 3. Publicar la versión nueva en la misma dirección */
 await rm(SERVIDO, { recursive: true, force: true });
 await mkdir(SERVIDO, { recursive: true });

@@ -182,11 +182,12 @@ const cliente = await nuevoCelular();
   await ctx.close();
 }
 
-/* ============ 3. Celular que ya tenía la tienda cargada ============ */
+/* ============ 3. Un cliente que ya usó la prueba no se cuela ============ */
 {
   const { ctx, page } = await nuevoCelular();
-  await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
+  await page.goto(URL_APP + '?clave=' + encodeURIComponent(PRUEBA));
   await page.waitForTimeout(2000);
+  // Registra productos durante su prueba (con fecha de hoy) y borra el rastro
   await page.evaluate(async () => {
     await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
       costo: 10, precio: 16, stock: 0, minimo: 4 });
@@ -195,11 +196,32 @@ const cliente = await nuevoCelular();
     localStorage.removeItem('tienda-acceso');
   });
   await page.reload();
+  await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
+  paso('un cliente que registró productos en su prueba no se cuela: le vuelve a pedir clave');
+  await ctx.close();
+}
+
+/* ============ 4. Celular que ya tenía la tienda cargada ============ */
+{
+  const { ctx, page } = await nuevoCelular();
+  await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
+  await page.waitForTimeout(2000);
+  await page.evaluate(async () => {
+    // Producto registrado ANTES de que existiera la clave (tienda de siempre)
+    await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
+      costo: 10, precio: 16, stock: 0, minimo: 4 });
+    const p = await DB.getProducto('7501030465102');
+    p.creado = '2026-09-10T10:00:00.000Z';
+    await DB.guardarProducto(p);
+    await DB.setConfig('acceso', null);
+    localStorage.removeItem('tienda-acceso');
+  });
+  await page.reload();
   await page.waitForSelector('#vista-inicio.activa');
   await page.waitForTimeout(1500);
-  igual(await page.evaluate(() => Demo.estado().liberado), true, 'un celular con productos no pide clave');
+  igual(await page.evaluate(() => Demo.estado().liberado), true, 'un celular con productos viejos no pide clave');
   if (await page.$('#bloqueoDemo')) throw new Error('le pidió clave a la tienda');
-  paso('un celular que ya tenía productos NO queda encerrado: entra directo');
+  paso('el celular de la tienda (productos de antes) NO queda encerrado: entra directo');
   await ctx.close();
 }
 

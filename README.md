@@ -183,8 +183,14 @@ También se pueden mandar en el enlace, para no dictarlas:
 calculadas con PBKDF2-SHA256 y 150 000 vueltas. Aunque el código es público,
 de la huella no se puede sacar la clave.
 
-Los celulares que **ya tenían productos registrados** antes de esta versión no
-quedan encerrados: entran directo, para que ninguna tienda se quede fuera.
+Los celulares que **ya venían usando la app** antes de que existiera la clave
+entran directo, para que ninguna tienda se quede fuera. Se reconocen porque
+tienen productos registrados antes de esa fecha; lo que un cliente registre
+durante su prueba **no** cuenta para eso.
+
+Para ver la app como la ve un cliente sin usar otro celular: **Ajustes →
+Versión completa → "Ver cómo la vive un cliente"**, o abre el enlace en una
+**pestaña de incógnito**.
 
 Alcance honesto: es un candado de cortesía. Alguien técnico podría borrar los
 datos del navegador y pedir otra prueba. Para enseñarle la app a un cliente

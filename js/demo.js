@@ -24,6 +24,10 @@ const Demo = (() => {
   const HUELLA_PRUEBA = '2458ff3a6d0ed82cc581bdaa99fa1bfd2c07bd9999786eff9296d4da30ba3261';
 
   const CLAVE_LOCAL = 'tienda-acceso';
+  // Celulares que ya usaban la app ANTES de que existiera la clave: se les
+  // deja entrar directo para no dejar a ninguna tienda fuera. Se reconoce
+  // porque tienen productos registrados antes de esta fecha.
+  const ANTES_DE = '2026-09-16T01:20:00.000Z';
   const TIC = 5000;
   const GUARDADO = 15000;
 
@@ -301,13 +305,14 @@ const Demo = (() => {
       if (local.pruebaActivada) estado.pruebaActivada = true;
     }
 
-    // Primera vez con esta versión: si el celular ya tenía productos, es de
-    // la tienda (no de un cliente nuevo) y se queda con la versión completa.
+    // Primera vez con esta versión: si el celular ya venía usando la app de
+    // antes (productos registrados antes del corte), es de la tienda y entra
+    // directo. Lo que un cliente registre durante su prueba NO cuenta.
     if (!estado.revisadoInicial) {
       const productos = await DB.todosProductos();
       estado.revisadoInicial = true;
       estado.desde = new Date().toISOString();
-      if (productos.length > 0) estado.liberado = true;
+      if (productos.some((p) => p.creado && p.creado < ANTES_DE)) estado.liberado = true;
       await guardar();
     }
 

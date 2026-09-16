@@ -251,7 +251,7 @@ const DB = (() => {
       proveedorId: p.proveedorId !== undefined ? p.proveedorId : (previo ? previo.proveedorId : null),
       nota: p.nota !== undefined ? p.nota : (previo ? previo.nota : ''),
       invertido: previo ? num(previo.invertido) : 0,
-      creado: previo ? previo.creado : new Date().toISOString(),
+      creado: p.creado || (previo ? previo.creado : new Date().toISOString()),
       actualizado: new Date().toISOString()
     };
     return guardarEn('productos', prod).then(() => prod);
