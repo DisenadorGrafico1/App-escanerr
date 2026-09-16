@@ -12,13 +12,20 @@
  * Se regenera desde la app real, así que las dos nunca se desincronizan.
  */
 import { readFile, writeFile, rm, mkdir, cp } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DESTINO = join(RAIZ, 'app-de-prueba');
+// Se puede mandar a otra carpeta (por ejemplo el repositorio aparte de la
+// app de prueba):  node herramientas/construir-prueba.mjs /ruta/al/repo
+const DESTINO = process.argv[2]
+  ? resolve(process.argv[2])
+  : join(RAIZ, 'app-de-prueba');
 
-await rm(DESTINO, { recursive: true, force: true });
+// Se borra solo lo que genera esta herramienta: nunca .git ni el README.
+for (const cosa of ['index.html', 'styles.css', 'latido.txt', 'js', 'vendor', 'icons']) {
+  await rm(join(DESTINO, cosa), { recursive: true, force: true });
+}
 await mkdir(DESTINO, { recursive: true });
 
 /* ---------- lo que se copia tal cual ---------- */
@@ -86,7 +93,7 @@ let nucleo = await readFile(rutaNucleo, 'utf8');
 nucleo = nucleo.replace(/const VERSION = '([\d.]+)';/, "const VERSION = '$1-prueba';");
 await writeFile(rutaNucleo, nucleo);
 
-console.log('Versión de prueba lista en app-de-prueba/');
+console.log('Versión de prueba lista en ' + DESTINO);
 console.log('  · pide clave y da 30 minutos');
 console.log('  · no se instala ni se guarda en el celular');
 console.log('  · sin internet se tapa y el reloj se pausa');

@@ -21,9 +21,7 @@ compilación.
   escoger la rama `claude/grocery-inventory-app-is6fos`, dejar el framework
   en *Other* y sin comando de compilación.
 
-La app de prueba queda en la subcarpeta `app-de-prueba/`, así que con un solo
-despliegue salen los dos enlaces: `…/` para la tienda y `…/app-de-prueba/`
-para los clientes.
+La app de prueba se publica por separado desde su propio repositorio.
 
 Ojo: si se apaga la publicación, los celulares que **ya la tienen instalada**
 siguen funcionando (la app vive dentro del teléfono), pero dejan de recibir
@@ -193,14 +191,16 @@ Este repositorio produce **dos apps** a partir del mismo código:
 | Sin internet | ✅ Funciona | ❌ Se tapa y avisa |
 | Se instala en el celular | ✅ Sí | ❌ No (solo abre por el enlace) |
 
-La de prueba se genera con:
+La de prueba **vive en su propio repositorio**
+([app-de-prueba](https://github.com/DisenadorGrafico1/app-de-prueba)) y no se
+edita a mano: se genera desde este código, así que **nunca se desincronizan**.
 
 ```bash
-npm run construir-prueba     # deja todo listo en app-de-prueba/
+npm run construir-prueba                              # a ./app-de-prueba (local, ignorado por git)
+node herramientas/construir-prueba.mjs /ruta/al/repo  # directo al repositorio de la prueba
 ```
 
-Se regenera desde la app real, así que **nunca se desincronizan**: cualquier
-mejora que se haga en la tienda aparece en la prueba al reconstruirla.
+Después de generarla, en ese repositorio: `git add -A && git commit && git push`.
 
 ### Cómo funciona la prueba
 
