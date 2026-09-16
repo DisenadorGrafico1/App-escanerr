@@ -1,9 +1,11 @@
 /*
- * Prueba de la versión de prueba (30 minutos para quien abra el enlace).
+ * Prueba de la puerta de acceso: la app pide clave y la clave de prueba
+ * abre 30 minutos de uso.
  *
- * Necesita la llave del dueño, que NO vive en el repositorio:
- *   LLAVE_DUENO=... npm run prueba-demo
- * o dejarla en un archivo .llave (ignorado por git).
+ * Necesita las claves, que NO viven en el repositorio:
+ *   LLAVE_DUENO=... CLAVE_PRUEBA=... npm run prueba-demo
+ * o dejarlas en un archivo .llave (ignorado por git): llave del dueño en la
+ * primera línea, clave de prueba en la tercera.
  */
 import { chromium } from 'playwright';
 import { createServer } from 'node:http';
@@ -17,11 +19,16 @@ const TIPOS = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/cs
   '.json': 'application/json', '.png': 'image/png', '.webmanifest': 'application/manifest+json' };
 
 let LLAVE = process.env.LLAVE_DUENO || '';
-if (!LLAVE) {
-  try { LLAVE = (await readFile(join(RAIZ, '.llave'), 'utf8')).trim(); } catch {}
+let PRUEBA = process.env.CLAVE_PRUEBA || '';
+if (!LLAVE || !PRUEBA) {
+  try {
+    const lineas = (await readFile(join(RAIZ, '.llave'), 'utf8')).split('\n').map((l) => l.trim());
+    LLAVE = LLAVE || lineas[0];
+    PRUEBA = PRUEBA || lineas[3];
+  } catch {}
 }
-if (!LLAVE) {
-  console.error('Falta la llave del dueño: LLAVE_DUENO=... npm run prueba-demo');
+if (!LLAVE || !PRUEBA) {
+  console.error('Faltan las claves: LLAVE_DUENO=... CLAVE_PRUEBA=... npm run prueba-demo');
   process.exit(1);
 }
 
@@ -62,33 +69,38 @@ async function nuevoCelular() {
   page.on('console', (m) => { if (m.type() === 'error') errores.push('console: ' + m.text()); });
   return { ctx, page };
 }
-const irAjustes = async (page) => {
-  await page.click('#btnMenu');
-  await page.waitForTimeout(250);
-  await page.click('.cajon-menu button[data-vista="ajustes"]');
-  await page.waitForTimeout(500);
+const escribirClave = async (page, clave) => {
+  await page.fill('#pinDemo', clave);
+  await page.click('#btnDesbloquear');
+  await page.waitForTimeout(2500);
 };
 
-/* ============ 1. El celular de la clienta: abre el enlace ============ */
+/* ============ 1. La clienta abre el enlace ============ */
 const cliente = await nuevoCelular();
 {
   const { page } = cliente;
   await page.goto(URL_APP);
-  await page.waitForSelector('#vista-inicio.activa');
-  await page.waitForTimeout(1200);
+  await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
+  const puerta = await page.textContent('#bloqueoDemo');
+  if (!/Escribe tu clave/.test(puerta)) throw new Error('no pidió clave: ' + puerta.slice(0, 80));
+  paso('al abrir el enlace pide la clave antes de dejar usar nada');
+  await page.screenshot({ path: '/tmp/puerta.png' });
 
-  await page.waitForSelector('#modalCaja h2', { timeout: 5000 });
+  await escribirClave(page, 'lo-que-sea');
+  if (!(await page.$('#bloqueoDemo'))) throw new Error('entró con una clave inventada');
+  igual((await page.textContent('#errorPin')).trim(), 'Esa clave no es correcta.', 'avisa de clave incorrecta');
+  paso('con una clave inventada no entra');
+
+  await escribirClave(page, PRUEBA);
+  if (await page.$('#bloqueoDemo')) throw new Error('la clave de prueba no abrió la app');
+  await page.waitForTimeout(500);
   const bienvenida = await page.textContent('#modalCaja');
-  if (!/30 minutos/.test(bienvenida)) throw new Error('no dio la bienvenida de prueba: ' + bienvenida.slice(0, 80));
-  paso('al abrir el enlace, la clienta ve el aviso de prueba de 30 minutos');
+  if (!/30 minutos/.test(bienvenida)) throw new Error('no dio la bienvenida: ' + bienvenida.slice(0, 60));
   await page.click('#mOk');
-
   const chip = (await page.textContent('#chipDemo')).trim();
   if (!/⏳/.test(chip)) throw new Error('no se ve el contador: ' + chip);
-  igual(await page.evaluate(() => Demo.estado().liberado), false, 'el celular de la clienta está en prueba');
-  paso('arriba le aparece el contador: "' + chip + '"');
+  paso('con la clave de prueba entra y arrancan los 30 minutos ("' + chip + '")');
 
-  // Usa la app con normalidad
   await page.evaluate(async () => {
     await DB.guardarProducto({ codigo: '7501055300013', nombre: 'Coca Cola 600 ml', categoria: 'Bebidas',
       costo: 12, precio: 18, stock: 0, minimo: 6 });
@@ -99,92 +111,95 @@ const cliente = await nuevoCelular();
   await page.fill('#mCod', '7501055300013');
   await page.click('#mOk');
   await page.waitForTimeout(300);
-  igual(await page.textContent('#carritoTotal'), '$18.00', 'la clienta puede usar la app');
+  igual(await page.textContent('#carritoTotal'), '$18.00', 'la app funciona durante la prueba');
   paso('durante la prueba la app funciona completa');
 
-  // Corre el tiempo
   const antes = await page.evaluate(() => Demo.estado().usadosMs);
   await page.waitForTimeout(11000);
-  const despues = await page.evaluate(() => Demo.estado().usadosMs);
-  if (!(despues > antes)) throw new Error('el tiempo no corrió');
-  paso('el tiempo corre mientras usa la app (' + Math.round(despues / 1000) + ' s)');
+  if (!((await page.evaluate(() => Demo.estado().usadosMs)) > antes)) throw new Error('el tiempo no corrió');
+  paso('el tiempo corre mientras la usa');
 
-  // Se le acaba
+  await page.reload();
+  await page.waitForTimeout(1200);
+  if (await page.$('#bloqueoDemo')) throw new Error('volvió a pedir clave dentro de la prueba');
+  paso('si cierra y vuelve a abrir, sigue dentro de su prueba (no pide clave otra vez)');
+
   await page.evaluate(async () => {
     const d = Demo.estado();
     d.usadosMs = Demo.limiteMs() - 2000;
-    await DB.setConfig('prueba', d);
+    await DB.setConfig('acceso', d);
   });
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
-  paso('al cumplirse los 30 minutos se bloquea');
+  const agotada = await page.textContent('#bloqueoDemo');
+  if (!/Se terminó tu prueba/.test(agotada)) throw new Error('no avisó del fin de la prueba');
+  paso('al cumplirse los 30 minutos se cierra y avisa');
   await page.screenshot({ path: '/tmp/prueba-bloqueo.png' });
 
+  await escribirClave(page, PRUEBA);
+  if (!(await page.$('#bloqueoDemo'))) throw new Error('la clave de prueba volvió a abrir la app');
+  if (!/ya se usó/.test(await page.textContent('#errorPin'))) throw new Error('no avisó que la prueba ya se usó');
+  paso('la clave de prueba ya no sirve en ese celular ("ya se usó")');
+
+  await page.evaluate(() => localStorage.removeItem('tienda-acceso'));
   await page.reload();
   await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
-  paso('sigue bloqueada aunque cierre y vuelva a abrir');
+  await escribirClave(page, PRUEBA);
+  if (!(await page.$('#bloqueoDemo'))) throw new Error('borrando el rastro consiguió otra prueba');
+  paso('borrar el rastro del navegador no le da otra prueba');
 
-  await page.fill('#pinDemo', 'libre-0000-0000');
-  await page.click('#btnDesbloquear');
-  await page.waitForTimeout(1500);
-  if (!(await page.$('#bloqueoDemo'))) throw new Error('¡se abrió con una llave inventada!');
-  paso('con una llave inventada no se abre');
-
-  await page.evaluate(() => localStorage.removeItem('tienda-prueba'));
-  await page.reload();
-  await page.waitForSelector('#bloqueoDemo', { timeout: 15000 });
-  paso('borrar el rastro del navegador no le regala otra prueba');
-
-  // El dueño llega con su llave
-  await page.fill('#pinDemo', LLAVE);
-  await page.click('#btnDesbloquear');
-  await page.waitForTimeout(2500);
-  if (await page.$('#bloqueoDemo')) throw new Error('la llave correcta no desbloqueó');
-  igual(await page.evaluate(() => Demo.estado().liberado), true, 'quedó liberado');
-  paso('con la llave correcta queda activada la versión completa');
+  await escribirClave(page, LLAVE);
+  if (await page.$('#bloqueoDemo')) throw new Error('la llave del dueño no activó');
+  igual(await page.evaluate(() => Demo.estado().liberado), true, 'quedó activado');
+  paso('con tu llave queda activada la versión completa');
 
   await page.reload();
   await page.waitForSelector('#vista-inicio.activa');
-  await page.waitForTimeout(800);
-  if (await page.$('#bloqueoDemo')) throw new Error('volvió a bloquearse tras recargar');
+  await page.waitForTimeout(900);
+  if (await page.$('#bloqueoDemo')) throw new Error('volvió a pedir clave');
   igual(await page.evaluate(() => DB.getProducto('7501055300013').then((p) => p.stock)), 24, 'inventario intacto');
-  paso('sigue activada al reabrir y el inventario quedó intacto');
+  paso('ya no pide clave al abrir y el inventario quedó intacto');
   await cliente.ctx.close();
 }
 
-/* ============ 2. Otro celular: la llave en el enlace ============ */
+/* ============ 2. Claves en el enlace ============ */
 {
   const { ctx, page } = await nuevoCelular();
   await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
   await page.waitForSelector('#vista-inicio.activa');
   await page.waitForTimeout(2500);
-  igual(await page.evaluate(() => Demo.estado().liberado), true, 'el enlace con llave activa el celular');
+  igual(await page.evaluate(() => Demo.estado().liberado), true, 'el enlace con tu llave activa el celular');
   igual(await page.evaluate(() => location.search.includes('llave')), false, 'la llave se borra de la dirección');
-  igual(await page.evaluate(() => !!document.querySelector('#chipDemo:not(.oculto)')), false, 'sin contador de prueba');
-  paso('abriendo el enlace con la llave, el celular del dueño queda activado (y la llave desaparece de la dirección)');
+  paso('tu enlace con llave activa el celular sin pedir nada');
+  await ctx.close();
+}
+{
+  const { ctx, page } = await nuevoCelular();
+  await page.goto(URL_APP + '?clave=' + encodeURIComponent(PRUEBA));
+  await page.waitForTimeout(2500);
+  igual(await page.evaluate(() => Demo.estado().pruebaActivada), true, 'el enlace con la clave de prueba abre la prueba');
+  if (await page.$('#bloqueoDemo')) throw new Error('siguió pidiendo clave');
+  paso('también puedes mandar el enlace con la clave de prueba ya puesta');
   await ctx.close();
 }
 
 /* ============ 3. Celular que ya tenía la tienda cargada ============ */
 {
   const { ctx, page } = await nuevoCelular();
-  await page.goto(URL_APP);
-  await page.waitForSelector('#vista-inicio.activa');
-  await page.waitForTimeout(900);
-  // Simula una tienda que ya venía usando la app antes de esta versión
+  await page.goto(URL_APP + '?llave=' + encodeURIComponent(LLAVE));
+  await page.waitForTimeout(2000);
   await page.evaluate(async () => {
     await DB.guardarProducto({ codigo: '7501030465102', nombre: 'Sabritas', categoria: 'Botanas',
       costo: 10, precio: 16, stock: 0, minimo: 4 });
     await DB.agregarExistencia('7501030465102', 10, 10);
-    await DB.setConfig('prueba', null);
-    localStorage.removeItem('tienda-prueba');
+    await DB.setConfig('acceso', null);
+    localStorage.removeItem('tienda-acceso');
   });
   await page.reload();
   await page.waitForSelector('#vista-inicio.activa');
-  await page.waitForTimeout(1200);
-  igual(await page.evaluate(() => Demo.estado().liberado), true,
-    'un celular que ya tenía productos no entra en modo prueba');
-  if (await page.$('#bloqueoDemo')) throw new Error('bloqueó el celular de la tienda');
-  paso('el celular que ya tenía productos registrados NO entra en prueba: sigue completo');
+  await page.waitForTimeout(1500);
+  igual(await page.evaluate(() => Demo.estado().liberado), true, 'un celular con productos no pide clave');
+  if (await page.$('#bloqueoDemo')) throw new Error('le pidió clave a la tienda');
+  paso('un celular que ya tenía productos NO queda encerrado: entra directo');
   await ctx.close();
 }
 
@@ -192,7 +207,7 @@ if (errores.length) {
   console.error('  ✗ errores en consola:\n    ' + errores.join('\n    '));
   process.exitCode = 1;
 } else {
-  console.log('\nLa prueba de 30 minutos funciona y solo la llave del dueño la levanta.');
+  console.log('\nLa app pide clave, la de prueba da 30 minutos y solo tu llave la abre sin límite.');
 }
 await navegador.close();
 servidor.close();

@@ -161,38 +161,33 @@ próximas, cobros por vencer y fiados vencidos. Suena cuando hay algo nuevo
 
 ---
 
-## 🔑 Versión de prueba de 30 minutos
+## 🔑 Acceso con clave y prueba de 30 minutos
 
-Cualquiera que abra el enlace público puede usar la app **30 minutos de uso**.
-Al abrirla ve un aviso de bienvenida, arriba le corre el contador (⏳ 23 min) y
-al terminarse aparece una pantalla que la bloquea e invita a pedir la versión
-completa. Lo que registró durante la prueba **no se borra**.
+La app **pide una clave al abrir**. Hay dos:
+
+| Clave | Qué hace |
+|---|---|
+| **De prueba** (la que le das al cliente) | Abre la app por **30 minutos de uso**. Al terminarse vuelve a pedir clave y avisa que esa prueba ya se usó en ese celular. |
+| **Del dueño** | Activa ese celular con la **versión completa**: ya no vuelve a pedir clave ni tiene contador. |
 
 - El reloj corre **solo con la app abierta**: si la cierra, se pausa.
-- El conteo se guarda en dos lugares, así que borrar uno no regala otra prueba.
+- Si cierra y vuelve a abrir dentro de su prueba, **no le pide la clave otra vez**.
+- El avance se guarda en dos lugares, así que borrar uno no regala otra prueba.
 - Mover la hora del celular hacia atrás no da tiempo extra.
+- Lo que el cliente registre **no se borra**.
 
-### Activar un celular (versión completa)
+También se pueden mandar en el enlace, para no dictarlas:
+`…/App-escanerr/?clave=LA-CLAVE` (la app la usa y la borra de la dirección).
 
-El dueño tiene una **llave de activación**. Se usa de dos formas:
-
-1. Escribiéndola en la pantalla de bloqueo, o en
-   **Ajustes → Versión de prueba**.
-2. Abriendo el enlace con la llave al final: `…/App-escanerr/?llave=LA-LLAVE`
-   (la app la activa y borra la llave de la dirección).
-
-Ese celular queda con la versión completa para siempre, sin contador.
-
-**La llave no está en este repositorio**: aquí solo vive su huella, calculada
-con PBKDF2-SHA256 y 150 000 vueltas. Aunque el código es público, de la huella
-no se puede sacar la llave.
+**Las claves no están en este repositorio**: aquí solo viven sus huellas,
+calculadas con PBKDF2-SHA256 y 150 000 vueltas. Aunque el código es público,
+de la huella no se puede sacar la clave.
 
 Los celulares que **ya tenían productos registrados** antes de esta versión no
-entran en modo prueba: se activan solos, para que la tienda no se quede
-bloqueada a media venta.
+quedan encerrados: entran directo, para que ninguna tienda se quede fuera.
 
 Alcance honesto: es un candado de cortesía. Alguien técnico podría borrar los
-datos del navegador y empezar otra prueba. Para enseñarle la app a un cliente
+datos del navegador y pedir otra prueba. Para enseñarle la app a un cliente
 cumple de sobra; un control real necesitaría un servidor de licencias.
 
 ## 🔢 Saber qué versión tienes

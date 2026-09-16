@@ -14,8 +14,8 @@ import { fileURLToPath } from 'node:url';
 // bienvenida de la versión de prueba no estorbe en las comprobaciones.
 const YA_ACTIVADO = () => {
   try {
-    localStorage.setItem('tienda-prueba', JSON.stringify({
-      liberado: true, revisadoInicial: true, bienvenida: true, usadosMs: 0, bloqueado: false
+    localStorage.setItem('tienda-acceso', JSON.stringify({
+      liberado: true, revisadoInicial: true, bienvenida: true, pruebaActivada: false, usadosMs: 0
     }));
   } catch (e) {}
 };

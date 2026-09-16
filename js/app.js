@@ -160,7 +160,7 @@
     const chip = $('#chipDemo');
     const d = Demo.estado();
     if (!chip) return;
-    if (!d || d.liberado || d.bloqueado) { chip.classList.add('oculto'); return; }
+    if (!d || d.liberado || !d.pruebaActivada) { chip.classList.add('oculto'); return; }
     chip.classList.remove('oculto');
     chip.textContent = '⏳ ' + Demo.textoRestante();
     chip.classList.toggle('poco', Demo.restanteMs() < 5 * 60000);
@@ -174,17 +174,22 @@
 
     if (d.liberado) {
       cont.innerHTML = '<h2>✅ Versión completa</h2>' +
-        '<p class="ayuda">Este celular tiene la app activada, sin límite de tiempo.</p>' +
-        '<button class="btn-texto" id="btnVolverPrueba">Ver cómo la vive un cliente (modo prueba)</button>';
+        '<p class="ayuda">Este celular está activado con tu llave: entra sin pedir clave y sin límite de tiempo.</p>' +
+        '<button class="btn-texto" id="btnVolverPrueba">Ver cómo la vive un cliente (pedir clave)</button>';
       $('#btnVolverPrueba').onclick = async () => {
-        const ok = await App.confirmar('Poner este celular en modo prueba',
-          'Verás la app como la ve un cliente: ' + Demo.minutos() + ' minutos y luego se bloquea. ' +
-          'Con tu llave la vuelves a activar cuando quieras.', 'Sí, ponerlo en prueba');
+        const ok = await App.confirmar('Volver a pedir clave en este celular',
+          'La app te pedirá clave al abrir, como a un cliente. Con tu llave la vuelves a activar cuando quieras.',
+          'Sí, pedir clave');
         if (!ok) return;
         await Demo.volverAPrueba();
         pintarDemo();
-        aviso('Este celular quedó en modo prueba');
       };
+      return;
+    }
+
+    if (!d.pruebaActivada) {
+      cont.innerHTML = '<h2>🔒 Acceso con clave</h2>' +
+        '<p class="ayuda">Esta app pide clave al abrir.</p>';
       return;
     }
 
@@ -194,8 +199,8 @@
         '<div><span>De</span><b>' + Demo.minutos() + ' min</b></div>' +
       '</div>' +
       '<p class="ayuda">El tiempo corre solo mientras usas la app. Lo que registres no se borra.</p>' +
-      '<div class="campo"><label>¿Tienes la llave de activación?</label>' +
-        '<input type="password" id="llaveDemo" placeholder="llave" autocomplete="off"></div>' +
+      '<div class="campo"><label>¿Tienes la clave completa?</label>' +
+        '<input type="password" id="llaveDemo" placeholder="clave" autocomplete="off"></div>' +
       '<button class="btn-principal" id="btnActivarDemo">Activar versión completa</button>';
 
     $('#btnActivarDemo').onclick = async () => {
